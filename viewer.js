@@ -296,7 +296,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? `https://www.google.com/maps?q=${s.lat},${s.lon}`
             : location.href;
 
-        const text = `${head}\n\n― いまここで、この話が生まれた。\n#イマココ怪談`;
+        // 2026-10: 文面には町名まで（例:「東京都 南千住四丁目のあたりで」）。地図リンクの座標はそのまま
+        const place = [s.prefecture, s.placeName].filter(v => v && v !== "名前のない場所").join(" ");
+        const where = place ? `${place}のあたりで` : "いまここで";
+        const text = `${head}\n\n― ${where}、この話が生まれた。\n#イマココ怪談`;
         return { text, url };
     }
 
