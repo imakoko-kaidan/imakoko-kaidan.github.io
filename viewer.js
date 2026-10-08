@@ -156,10 +156,27 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // シェア（予告編型: 怪談の冒頭80字 + 生まれた座標のGoogleマップリンク + ハッシュタグ）
         const shareBtn = document.getElementById("er-share");
+        // 2026-10: 画像カード（題・土地・最初の一文）を前もって作っておく。
+        // ボタンを押してから作ると、iPhoneでは「タップ直後」の扱いが切れてシェア画面が開かないことがあるため
+        let cardFile = null;
+        const prepCard = async () => {
+            if (cardFile || !window.ImakokoShareCard) return cardFile;
+            try {
+                const blob = await ImakokoShareCard.make(story, { timeWord: timeBand(new Date().getHours()) });
+                if (blob) cardFile = new File([blob], "imakoko-kaidan.jpg", { type: "image/jpeg" });
+            } catch (e) { cardFile = null; }
+            return cardFile;
+        };
+        setTimeout(prepCard, 4000);   // 読み始めて少ししてから裏で作る(読書の邪魔をしない)
         shareBtn.addEventListener("click", async () => {
             const { text, url } = buildShare(story);
+            const file = cardFile || await prepCard();
             try {
-                if (navigator.share) {
+                if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], text: text + "\n" + url });
+                } else if (file) {
+                    showCardPreview(file, text, url);      // 画像を渡せない端末(主にPC): 見せて保存・コピー
+                } else if (navigator.share) {
                     await navigator.share({ text, url });
                 } else {
                     await navigator.clipboard.writeText(text + "\n" + url);
@@ -168,6 +185,26 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             } catch (e) { /* キャンセルは無視 */ }
         });
+
+        /** 画像を直接シェアできない端末向け: カードを表示し、保存とコピーを用意する */
+        function showCardPreview(file, text, url) {
+            const old = document.getElementById("card-preview"); if (old) old.remove();
+            const wrap = document.createElement("div");
+            wrap.id = "card-preview";
+            const src = URL.createObjectURL(file);
+            wrap.innerHTML = `<div class="cp-inner">
+                <img src="${src}" alt="シェア用の画像カード">
+                <div class="cp-actions">
+                    <a class="er-btn" href="${src}" download="imakoko-kaidan.jpg">画像を保存</a>
+                    <button type="button" class="er-btn" id="cp-copy">文章とリンクをコピー</button>
+                    <button type="button" class="er-btn er-link" id="cp-close">閉じる</button>
+                </div></div>`;
+            document.body.appendChild(wrap);
+            wrap.querySelector("#cp-close").onclick = () => { wrap.remove(); URL.revokeObjectURL(src); };
+            wrap.querySelector("#cp-copy").onclick = async (ev) => {
+                try { await navigator.clipboard.writeText(text + "\n" + url); ev.target.textContent = "コピーしました"; } catch (e) { /* noop */ }
+            };
+        }
 
         // ── 星5つの評価（自分のコレクション=IndexedDBのピンの時だけ）。骨格の良し悪し集計に使う。
         if (pinId && story.id && typeof ImakokoDB !== "undefined") {
