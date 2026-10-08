@@ -121,9 +121,13 @@
         g.fillText("この話が生まれた。", 120, 1212);
         g.fillStyle = "#8a93ad";
         g.font = `26px ${FONT}`;
-        g.fillText("#イマココ怪談", 80, 1280);
-        g.textAlign = "right";
-        g.fillText(SITE, W - 80, 1280);
+        g.fillText(`#イマココ怪談　${SITE}`, 80, 1280);
+        // 右下: サイトへ飛ぶQRコード（固定URLなので画像を同梱。明るい地に暗い点＝どのカメラでも読める）
+        const qr = await loadImage("./assets/qr_site.png");
+        if (qr) {
+            const q = 170, qx = W - 80 - q, qy = 1124;
+            g.drawImage(qr, qx, qy, q, q);
+        }
         // 細い区切り線
         g.strokeStyle = "rgba(170,180,210,.25)"; g.lineWidth = 1;
         g.beginPath(); g.moveTo(80, 1110); g.lineTo(W - 80, 1110); g.stroke();
