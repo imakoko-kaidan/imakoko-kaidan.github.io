@@ -1,0 +1,16 @@
+{
+  "name": "イマココ怪談",
+  "short_name": "イマココ怪談",
+  "description": "いま、あなたがいる場所の怪談を、ひとつ。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#030408",
+  "theme_color": "#030408",
+  "icons": [
+    { "src": "./assets/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "./assets/icon-512.png", "type": "image/png", "sizes": "512x512" },
+    { "src": "./assets/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,763 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html { background-color: #030408; }   /* 最背面の保険色 */
+
+body {
+    background-color: transparent;     /* 読書背景画像(#read-bg)を透けさせる */
+    background-image: radial-gradient(#111 1px, transparent 1px);
+    background-size: 4px 4px;
+    color: #e0e0e0;
+    font-family: "Shippori Mincho", "Noto Serif JP", serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    /* スマホではタップによるハイライトなどを無効化  */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: pan-x pan-y; /* ピンチ/ダブルタップ拡大を抑止しつつスクロールは許可 */
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* 離脱ボタン（読書中いつでも戻れる。没入を壊さぬよう極めて控えめに） */
+#exit-btn {
+    position: fixed;
+    top: max(0.6rem, env(safe-area-inset-top));
+    right: max(0.6rem, env(safe-area-inset-right));
+    z-index: 300;
+    width: 2.2rem;
+    height: 2.2rem;
+    display: none; /* スタート画面後にJSで表示 */
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 1rem;
+    text-decoration: none;
+    border-radius: 50%;
+    background: rgba(3, 4, 8, 0.35);
+    transition: color 0.3s, background 0.3s;
+    -webkit-tap-highlight-color: transparent;
+}
+#exit-btn.visible { display: flex; }
+/* 語り手の声 ON/OFF（✕の左隣。種明かし画面(z200)の下に隠れる） */
+#voice-btn {
+    position: fixed;
+    top: max(0.6rem, env(safe-area-inset-top));
+    right: calc(max(0.6rem, env(safe-area-inset-right)) + 2.8rem);
+    z-index: 190;
+    height: 2.2rem;
+    padding: 0 0.9em;
+    border-radius: 999px;
+    border: 1px solid rgba(150, 160, 190, 0.22);
+    background: rgba(3, 4, 8, 0.35);
+    color: #6a6f7c;
+    font: 12px/1 "Shippori Mincho", serif;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: color 0.3s, background 0.3s, border-color 0.3s;
+    -webkit-tap-highlight-color: transparent;
+}
+#voice-btn.on { color: #cfd6ea; border-color: rgba(170, 190, 230, 0.45); }
+#voice-btn:hover, #voice-btn:active { background: rgba(3, 4, 8, 0.7); }
+#exit-btn:hover, #exit-btn:active {
+    color: #c9c9c9;
+    background: rgba(3, 4, 8, 0.7);
+}
+
+/* 初回スワイプ案内 */
+#swipe-hint {
+    position: fixed;
+    bottom: 9vh;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 250;
+    display: none; /* JSで初回のみ表示 */
+    align-items: center;
+    gap: 0.6em;
+    padding: 0.7em 1.4em;
+    background: rgba(3, 4, 8, 0.6);
+    border: 1px solid #2c3242;
+    border-radius: 999px;
+    color: #c9d4f0;
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    pointer-events: none;
+    writing-mode: horizontal-tb;
+    backdrop-filter: blur(2px);
+}
+#swipe-hint.show {
+    display: flex;
+    animation: hint-appear 0.8s ease both, hint-bob 1.6s ease-in-out 0.8s infinite;
+}
+#swipe-hint.fade {
+    animation: hint-leave 0.6s ease forwards;
+}
+#swipe-hint .sh-arrow {
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #8ab4f8;
+    animation: hint-arrow 1.6s ease-in-out infinite;
+}
+@keyframes hint-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes hint-leave {
+    to { opacity: 0; }
+}
+@keyframes hint-bob {
+    0%, 100% { transform: translateX(-50%); }
+    50% { transform: translateX(-54%); }
+}
+@keyframes hint-arrow {
+    0%, 100% { transform: translateX(0); opacity: 0.6; }
+    50% { transform: translateX(-6px); opacity: 1; }
+}
+
+/* スタート画面（タップを促す） */
+#start-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    color: #888;
+    text-align: center;
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: opacity 1s ease;
+}
+
+/* 演出用Canvas */
+#effect-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* ===== 読書画面の背景画像（全作品共通・最背面） ===== */
+#read-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -2;            /* 本文(z2-3)・作品別bg-layer(-1)より後ろ */
+    background: #030408 url("./assets/read_bg.jpg") center center / cover no-repeat;
+    pointer-events: none;
+    /* 画像のランプを上端へ、明るいビームのたまりを画面中央(文字の位置)へ合わせる。
+       少しズーム＋上方向にずらすことで「文字が照明の真下で照らされる」配置にする。 */
+    transform-origin: center center;
+    transform: scale(1.22) translateY(-7%);
+    /* 上の照明が明るすぎて白文字が読みにくいので、画像全体を少し暗く落とす */
+    /* 暗さは filter ではなく下の ::after の黒幕で付ける（動画に filter をかけるとスマホで重くなるため。2026-10） */
+}
+#read-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0.2;          /* ≒ 旧 brightness(0.8) */
+    pointer-events: none;
+}
+
+/* 背景ループ動画（再生が始まったら画像の上にふわっと出す） */
+#read-bg-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+}
+#read-bg-video.ready { opacity: 1; }
+
+/* 一瞬の恐怖演出（背景の差分画像。#read-bg の中なので背景と同じ位置・明るさで重なる） */
+#scare-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    pointer-events: none;
+}
+#scare-layer.on { opacity: 1; }
+
+/* 街灯のゆらぎ用の暗幕。本文の上・効果オーバーレイの下。lamp.jsが毎フレーム濃さを変える */
+#lamp-dim {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    z-index: 11;
+    pointer-events: none;
+    will-change: opacity;
+}
+
+/* 背景画像に天井ライト・光のすじ・床の照り返しが写り込んでいるので、
+   アプリが自前で描く同じ光は隠して二重表示を防ぐ（画像の光を主役にする）。 */
+#light-source,
+#light-beam,
+#floor-glow {
+    display: none !important;
+}
+
+/* ===== 作品ごとの背景画像レイヤー（最暗部に敷く） ===== */
+#bg-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: -1; /* 本文より背後、bodyの背景色より手前 */
+    background-size: cover;
+    background-position: center bottom;
+    opacity: 0;
+    filter: brightness(0.5) saturate(0.55) contrast(1.05);
+    transition: opacity 2.5s ease;
+    pointer-events: none;
+}
+#bg-layer.visible {
+    opacity: 0.4; /* 「気配」程度に留め、テキストの可読性を守る */
+}
+
+/* ===== 光の円錐ビーム（天井灯から床へ広がる） ===== */
+#light-beam {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(150vw, 900px);
+    height: 100dvh;
+    z-index: 11;
+    pointer-events: none;
+    background: linear-gradient(to bottom,
+        rgba(190, 215, 255, 0.30) 0%,
+        rgba(180, 205, 255, 0.14) 45%,
+        rgba(170, 200, 255, 0.05) 75%,
+        rgba(170, 200, 255, 0.0) 100%);
+    clip-path: polygon(46% 0, 54% 0, 92% 100%, 8% 100%);
+    filter: blur(10px);
+    opacity: 0.9;
+}
+
+/* ===== 床の照り返し（濡れた床の楕円の光だまり） ===== */
+#floor-glow {
+    position: fixed;
+    bottom: -6vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(95vw, 560px);
+    height: 22vh;
+    z-index: 11;
+    pointer-events: none;
+    background: radial-gradient(ellipse 50% 50% at 50% 50%,
+        rgba(190, 215, 255, 0.20) 0%,
+        rgba(170, 200, 255, 0.08) 45%,
+        rgba(170, 200, 255, 0.0) 75%);
+    filter: blur(6px);
+}
+
+/* 光源（天井のランプ） */
+#light-source {
+    position: fixed;
+    top: -15px; /* スマホ画面に合わせて少し小さく上に */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 30px;
+    background: linear-gradient(to bottom, #fff, #8ab4f8);
+    border-radius: 50% 50% 10% 10%;
+    box-shadow: 0 0 30px 15px rgba(138, 180, 248, 0.4);
+    z-index: 12;
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+/* スポットライト効果（上からの円錐形の光） */
+#spotlight-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 10;
+    /* スマホの縦長画面に合わせた光の範囲 */
+    background: 
+        radial-gradient(ellipse 72% 118% at 50% 5%,
+            rgba(200, 220, 255, 0.05) 0%,
+            rgba(150, 180, 255, 0.02) 55%,
+            rgba(0, 0, 0, 0.82) 82%,
+            rgba(0, 0, 0, 1) 100%);
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 1);
+    transition: background 0.1s ease-in-out, opacity 0.1s;
+}
+
+.flicker-effect {
+    animation: flicker 0.15s infinite alternate;
+}
+
+@keyframes flicker {
+    0% { opacity: 0.8; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+/* 縦書きコンテナ */
+#story-container {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    width: 100vw;
+    /* モバイルブラウザのURLバーなどを考慮した100vh設定回避 (dvhが使える場合はそちらが望ましい) */
+    height: 100dvh; 
+    /* 最初の行が横幅中央(50vw)に来るよう左右50vw。上下は本文を上に寄せて下端が暗部に沈むのを防ぐ
+       (上を詰め、下を広げる＝テキスト帯を約3文字ぶん上へ) */
+    padding: 4vh 50vw 16vh;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory; 
+    /* Webkit（iOS Safari等）のスクロールバーを隠す */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+#story-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* 各々の行 */
+.story-line {
+    scroll-snap-align: center;
+    /* 1スワイプで1行ずつ進める（勢いで複数行飛ぶのを防ぐ） */
+    scroll-snap-stop: always;
+    /* スマホ画面だと幅が狭いので、行間を適度な距離（2rem〜3rem程度）に設定 */
+    padding: 0 2rem;
+    opacity: 0;
+    /* translateY: テキスト全体を少し下げて、照明の明るいたまりの中央に置く */
+    transform: translateY(7vh) scale(0.95);
+    filter: blur(4px);
+    transition: all 0.5s ease;
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+    /* スマホに最適化したフォントサイズ */
+    font-size: clamp(1.1rem, 5vw, 1.4rem);
+    line-height: 2;
+    letter-spacing: 0.15em;
+}
+
+/* スポットライトの段階的な明るさ（中央から外へ向かって暗くなる）
+   lit   = 照明の真下（中央）。今まで通りの明るさ・くっきり発光＝読みやすい
+   near1 = 中央の左右ひとつ隣。少し暗め
+   near2 = ふたつ隣。もっと暗め
+   それ以遠（クラス無し）= .story-line の opacity:0 ＝ 消える                       */
+.story-line.lit {
+    opacity: 1;
+    transform: translateY(7vh) scale(1);
+    filter: blur(0px);
+    color: #ffffff;
+    /* スマホでもはっきりと読める発光感 */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(138, 180, 248, 0.4);
+    z-index: 3;
+}
+.story-line.near1 {
+    opacity: 0.5;
+    transform: translateY(7vh) scale(0.985);
+    filter: blur(2px);
+    color: #dfe3ee;
+    z-index: 2;
+}
+.story-line.near2 {
+    opacity: 0.18;
+    transform: translateY(7vh) scale(0.96);
+    filter: blur(3px);
+    color: #c4c9d6;
+    z-index: 2;
+}
+
+/* ===== 全画面エフェクト（FLASH / BLACKOUT） ===== */
+#fx-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+    background: transparent;
+}
+#fx-overlay.fx-flash {
+    background: #4a0000;
+    animation: fx-flash-anim 0.4s ease-out forwards;
+}
+@keyframes fx-flash-anim {
+    0% { opacity: 0.95; }
+    100% { opacity: 0; }
+}
+#fx-overlay.fx-blackout {
+    background: #000;
+    opacity: 1;
+    transition: opacity 0.1s;
+}
+
+/* 画面が完全に真っ暗に「点滅」する（照明がジジッと消えかける感じ）。
+   steps(1,end)で各段を保持＝くっきり明滅。最後は透明に戻る。 */
+#fx-overlay.fx-blink {
+    background: #000;
+    animation: fx-blink-anim 0.9s steps(1, end) forwards;
+}
+@keyframes fx-blink-anim {
+    0%   { opacity: 1; }   /* いきなり真っ暗 */
+    11%  { opacity: 0; }
+    19%  { opacity: 1; }
+    28%  { opacity: 0; }
+    40%  { opacity: 1; }
+    54%  { opacity: 0; }
+    64%  { opacity: 1; }
+    100% { opacity: 0; }   /* 戻る */
+}
+
+/* ===== 画面シェイク（パニック） ===== */
+body.fx-shake {
+    animation: fx-shake-anim 0.08s linear infinite;
+}
+@keyframes fx-shake-anim {
+    0%   { transform: translate(3px, 2px); }
+    25%  { transform: translate(-4px, -3px); }
+    50%  { transform: translate(4px, -2px); }
+    75%  { transform: translate(-3px, 3px); }
+    100% { transform: translate(2px, -3px); }
+}
+
+/* ===== 偽バッテリー警告バナー（デバイスUI侵食） ===== */
+#fake-battery {
+    position: fixed;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92vw, 380px);
+    background: rgba(28, 28, 30, 0.96);
+    color: #f2f2f7;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    font-size: 0.82rem;
+    padding: 12px 16px;
+    border-radius: 14px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+    transition: top 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+    pointer-events: none;
+    writing-mode: horizontal-tb;
+}
+#fake-battery.show {
+    top: 12px;
+}
+#fake-battery .fb-icon {
+    font-size: 1.2rem;
+}
+
+/* ===== 読了の闇（最終行の後の余白） ===== */
+.story-line.story-end {
+    min-height: 80vh;
+    /* 縦書き(列が右→左)の末尾に画面幅ぶんの暗闇を足す。これがあると最後の行を
+       画面の右外まで送り切れる＝文章が完全に消えてからボタンを出せる。 */
+    width: 100vw;
+}
+
+/* ===== 出典エンドロール（種明かし・現実モード） ===== */
+#endroll {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 200;
+    background: rgba(2, 3, 6, 0.97);
+    writing-mode: horizontal-tb;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 2.5s ease, visibility 0s linear 2.5s;
+}
+#endroll.show {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 2.5s ease;
+}
+.er-inner {
+    width: min(560px, 90vw);
+    margin: 0 auto;
+    padding: 14vh 0 10vh;
+}
+.er-title {
+    color: #8a93ad;
+    font-size: 0.95rem;
+    letter-spacing: 0.25em;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+.er-fact {
+    position: relative;
+    border-left: 1px solid #2c3242;
+    padding: 0.2rem 0 0.2rem 1.6rem;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: er-fadein 1.2s ease forwards;
+}
+.er-fact:nth-child(1) { animation-delay: 1.0s; }
+.er-fact:nth-child(2) { animation-delay: 2.2s; }
+.er-fact:nth-child(3) { animation-delay: 3.4s; }
+.er-fact:nth-child(4) { animation-delay: 4.6s; }
+.er-fact:nth-child(5) { animation-delay: 5.8s; }
+.er-fact:nth-child(n+6) { animation-delay: 7.0s; }
+@keyframes er-fadein {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.er-num {
+    position: absolute;
+    left: -0.5em;
+    top: -0.2em;
+    background: #030408;
+    color: #555;
+    font-size: 0.8rem;
+    padding: 0.1em 0.2em;
+}
+.er-fact p {
+    color: #c9c9c9;
+    font-size: 0.88rem;
+    line-height: 2;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4rem;
+}
+.er-fact a, .er-src {
+    color: #5d6880;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    border-bottom: 1px dotted #3a445c;
+}
+.er-fact a:hover { color: #8a93ad; }
+.er-note {
+    color: #666;
+    font-size: 0.78rem;
+    line-height: 2;
+    letter-spacing: 0.08em;
+    text-align: center;
+    margin: 3rem 0 2.5rem;
+    opacity: 0;
+    animation: er-fadein 1.2s ease forwards;
+    animation-delay: 7.0s;
+}
+.er-rate {
+    text-align: center;
+    margin: 1.5rem 0 2.2rem;
+    opacity: 0;
+    animation: er-fadein 1.2s ease forwards;
+    animation-delay: 6.0s;
+}
+.er-rate-label {
+    color: #8a90a3;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.7rem;
+}
+.er-stars {
+    display: inline-flex;
+    gap: 0.35rem;
+}
+.er-star {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 2rem;
+    line-height: 1;
+    padding: 0 0.1rem;
+    color: #2b2f3d;                 /* 未選択は沈んだ色 */
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+.er-star:hover { transform: scale(1.15); }
+.er-star.on {
+    color: #e8c46a;                 /* 選択済みは灯りの色 */
+    text-shadow: 0 0 10px rgba(232, 196, 106, 0.5);
+}
+.er-rate-thanks {
+    color: #666;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    margin-top: 0.6rem;
+}
+.er-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: center;
+    opacity: 0;
+    animation: er-fadein 1.2s ease forwards;
+    animation-delay: 8.0s;
+}
+.er-btn {
+    font-family: inherit;
+    display: inline-block;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    color: #dfe6ff;
+    background: #1c2438;
+    border: 1px solid #3d4d77;
+    border-radius: 4px;
+    padding: 0.85em 2em;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s;
+    width: min(360px, 80vw);
+}
+.er-btn:hover {
+    background: #25304d;
+    box-shadow: 0 0 18px rgba(138, 180, 248, 0.25);
+}
+.er-link {
+    background: transparent;
+    border-color: #2c3242;
+    color: #777;
+}
+
+/* ギミック：暗がりに浮かぶシルエット */
+.story-line.ghost-silhouette {
+    opacity: 0.25 !important;
+    filter: blur(6px) !important;
+    text-shadow: 0 0 15px #ff0000 !important;
+}
+
+/* ギミックタグの行は画面から消す */
+.story-line[data-gimmick] {
+    display: none;
+}
+
+/* PC等の横長画面での余白調整 (スマホ版をベースに、横長時に中央寄せなどを担保) */
+@media (min-width: 768px) {
+    #story-container {
+        /* 中央にコンテンツを寄せる場合などに調整。今回は横スクロールなので左右paddingのみ */
+        padding: 10vh 50vw;
+    }
+    #story-container {
+        padding: 4vh 50vw 16vh;
+    }
+    .story-line {
+        font-size: 1.5rem;
+    }
+}
+
+/* ===== 読了の儀式：ろうそく（candle.js） ===== */
+#candle-dark {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 70%, rgba(0,0,0,.55) 0, rgba(0,0,0,.93) 38%, #000 70%);
+    opacity: 0;
+    transition: opacity 2.2s ease, background 1.2s ease;
+}
+#candle-dark.show { opacity: 1; }
+#candle-dark.full { background: #000; transition: background 1.4s ease; }
+
+#candle {
+    position: fixed;
+    left: 50%;
+    bottom: 5vh;
+    transform: translateX(-50%);
+    z-index: 170;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.8s ease;
+    writing-mode: horizontal-tb;
+    font-family: "Shippori Mincho", serif;
+}
+#candle.show { opacity: 1; pointer-events: auto; }
+#candle .cd-stage { position: relative; width: 140px; height: 300px; }
+#candle-canvas { position: relative; z-index: 1; display: block; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#candle-glow {
+    position: absolute;
+    left: 50%;
+    top: 140px;
+    width: 560px;
+    height: 560px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255,176,90,.30) 0, rgba(255,130,50,.10) 30%, rgba(255,110,40,0) 62%);
+    mix-blend-mode: screen;
+}
+#candle .cd-label {
+    color: #c9c2b4;
+    font-size: 14px;
+    letter-spacing: .14em;
+    margin: 0 0 -40px;
+    text-shadow: 0 0 8px rgba(255,170,90,.25);
+    transition: opacity 1s ease;
+}
+#candle .cd-actions { margin-top: -6px; text-align: center; transition: opacity 1s ease; }
+#candle .cd-mic {
+    background: rgba(20,14,10,.6);
+    color: #d8cdb8;
+    border: 1px solid rgba(220,180,130,.35);
+    border-radius: 999px;
+    padding: .5em 1.3em;
+    font: 13px/1.4 "Shippori Mincho", serif;
+    letter-spacing: .08em;
+    cursor: pointer;
+}
+#candle .cd-mic.on { border-color: rgba(255,190,120,.6); color: #ffe2b8; }
+#candle .cd-mic:disabled { cursor: default; }
+#candle .cd-hint { color: #7d776c; font-size: 11px; letter-spacing: .06em; margin: .6em 0 0; }
+#candle.out .cd-label, #candle.out .cd-actions { opacity: 0; pointer-events: none; }
+
+/* エンドロール：この話で鳴った音の出典（2026-10） */
+.er-sound {
+    margin: -1.2rem 0 2.4rem;
+    text-align: center;
+    opacity: 0;
+    animation: er-fadein 1.2s ease forwards;
+    animation-delay: 7.6s;
+}
+.er-sound-title { color: #5d6478; font-size: 0.72rem; letter-spacing: 0.2em; margin: 0 0 .5rem; }
+.er-sound-row { margin: .15rem 0; font-size: 0.66rem; line-height: 1.7; color: #555c6e; letter-spacing: .04em; }
+.er-sound-row span { color: #6b7286; margin-right: .6em; }
+.er-sound-row a { color: #5a6378; text-decoration: none; border-bottom: 1px dotted #3a445c; word-break: break-all; }
+.er-sound-row a:hover { color: #8a93ad; }
+
+/* スタート画面の注意書き（点滅・暗転・突然の音） */
+#start-screen { flex-direction: column; }
+#start-screen .ss-warn {
+    position: absolute;
+    left: 50%;
+    bottom: 7vh;
+    transform: translateX(-50%);
+    width: min(94vw, 560px);
+    color: #5c6170;
+    font-size: 11px;
+    line-height: 1.9;
+    letter-spacing: .05em;
+}
+#start-screen #ss-level { color: #7d8394; }

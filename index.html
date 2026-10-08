@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script src="./app-version.js?v=0.154"></script>
+    <title>イマココ怪談</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#030408">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="イマココ怪談">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./home.css?v=0.154">
+</head>
+<body>
+    <!-- トップページの背景画像（最背面・CSSグリッチ） -->
+    <div id="home-bg" aria-hidden="true"></div>
+    <!-- 文字を読みやすくする暗幕（グリッチ層とは別） -->
+    <div id="home-dim" aria-hidden="true"></div>
+
+    <!-- 演出レイヤー(操作不可・背面〜前面) -->
+    <canvas id="noise-canvas" aria-hidden="true"></canvas>
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="dread-flash" aria-hidden="true"></div>
+
+    <main class="home">
+        <header>
+            <h1>イマココ怪談</h1>
+            <p class="copy">いま、あなたがいる場所の怪異を呼び<br>時間と場所を超越した怪談がウマレル…</p>
+        </header>
+
+        <button id="generate-btn" class="big-btn" data-text="この場所で怪談を産む">
+            この場所で怪談を産む
+        </button>
+
+        <p id="status" class="status"></p>
+
+        <nav class="home-nav">
+            <a href="./map.html" class="nav-link" data-text="📍 集めた怪談の地図">📍 集めた怪談の地図</a>
+        </nav>
+
+        <p id="pin-count" class="pin-count"></p>
+
+        <details id="settings" class="settings">
+            <summary>設定</summary>
+            <label>Gemini API Key
+                <input type="password" id="api-key" placeholder="APIキーを入力(端末に保存されます)">
+            </label>
+            <label>座標を手動指定（任意・「緯度,経度」）
+                <input type="text" id="manual-coords" placeholder="例: 35.4407281,139.6310133（空なら現在地を使用）">
+            </label>
+
+            <label>生成モデル（質とコストの体感比較用）
+                <select id="model-select">
+                    <option value="gemini-3.8-flash">おすすめ / gemini-3.8-flash（約1.3円・最新で賢い・約20秒）</option>
+                    <option value="gemini-3.5-flash-lite">最安 / gemini-3.5-flash-lite（約0.4円・約5秒・短め/質は割切り）</option>
+                    <option value="gemini-3.1-pro-preview">最高品質 / gemini-3.1-pro（約6円目安・遅め・有料キーのみ）</option>
+                </select>
+            </label>
+            <label>怖さ
+                <select id="scare-level">
+                    <option value="mild">控えめ（激しい点滅・暗転・揺れなし／一瞬の恐怖演出は少なめ）</option>
+                    <option value="standard">標準（おすすめ）</option>
+                    <option value="intense">本気（灯りの乱れも、一瞬の何かも多め）</option>
+                </select>
+            </label>
+            <label class="toggle-row">
+                <input type="checkbox" id="refine-enabled">
+                <span>推敲する（編集者AIが怖さの観点で書き直す・1話あたり約1.3円と約20秒の追加）</span>
+            </label>
+            <label class="toggle-row">
+                <input type="checkbox" id="voice-enabled">
+                <span>語り手の声で読み上げる（1話あたり約7円の追加料金）</span>
+            </label>
+            <p class="note">※ 初期はOFFです。ONにすると、読む画面で「灯りをつける」を押したあと語り手が1行ずつ読み上げ、声に合わせて自動で進みます（画面タップで一時停止/再開、自分でスワイプすると止まった行から読み直し、右上の「声」ボタンでいつでもON/OFF）。一度聞いた話の声は端末に保存され、2回目からは無料です。OFFのあいだは音声を一切生成しません。</p>
+            <p class="note">※ 選んだモデルで生成します。失敗時は他の有効なモデルへ自動フォールバックします。コストは1話あたりの実測ベースの概算（2026-10測定・為替150円/ドル。3.8 Flashは2027年1月から約2倍）。<br>※ PCなど位置情報が取れない端末では座標を直接入力してください。空欄なら自動で現在地を測位します。位置情報は怪談の生成のみに使い端末の外に保存しません。検証用ビルドです。</p>
+        </details>
+
+        <details id="log-panel" class="settings log-panel">
+            <summary>診断ログ</summary>
+            <div class="log-toolbar">
+                <button id="log-copy" class="backup-btn">ログをコピー</button>
+                <button id="log-clear" class="backup-btn">クリア</button>
+            </div>
+            <pre id="log-output" class="log-output"></pre>
+        </details>
+
+        <footer>
+            <p>※ 音が出ます。1人の時は周りにお気をつけください…</p>
+            <p class="app-ver" data-app-version>v—</p>
+        </footer>
+    </main>
+
+    <script src="./settings.js?v=0.154"></script>
+    <script src="./prefs.js?v=0.154"></script>
+    <script src="./db.js?v=0.154"></script>
+    <script src="./home-fx.js?v=0.154"></script>
+    <script src="./story_skeletons.js?v=0.154"></script>
+    <script src="./sound_cues.js?v=0.154"></script>
+    <script src="./generate.js?v=0.154"></script>
+</body>
+</html>

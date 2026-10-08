@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script src="./app-version.js?v=0.154"></script>
+    <title>イマココ怪談 - 集めた怪談の地図</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+    <meta name="theme-color" content="#030408">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <link rel="stylesheet" href="./home.css?v=0.154">
+</head>
+<body>
+    <div class="map-page">
+        <header class="map-header">
+            <h1>あなたの怪談地図</h1>
+            <a href="./index.html">← 戻る</a>
+        </header>
+
+        <div id="map"></div>
+
+        <section class="pin-list">
+            <h2>聞いた話の記録 <span id="pin-total"></span></h2>
+            <div class="pin-controls" id="pin-controls" hidden>
+                <label>場所 <select id="pin-pref"><option value="">すべての都道府県</option></select></label>
+                <label>並び <select id="pin-sort">
+                    <option value="new">新しい順</option>
+                    <option value="scary">怖かった順（★が多い順）</option>
+                    <option value="pref">都道府県順（北から）</option>
+                    <option value="old">古い順</option>
+                </select></label>
+            </div>
+            <div id="pin-items"></div>
+            <p class="empty-pins hidden" id="empty-pins">
+                まだ、なにも集まっていません。<br>
+                <a href="./index.html">いまいる場所で、最初の一話を。</a>
+            </p>
+        </section>
+
+        <div class="backup-bar">
+            <button id="export-btn" class="backup-btn">⬇ 記録を書き出す(バックアップ)</button>
+            <button id="import-btn" class="backup-btn">⬆ 記録を読み込む</button>
+            <button id="clear-btn" class="backup-btn backup-btn-danger">🗑 すべて削除</button>
+            <input type="file" id="import-file" accept="application/json" style="display:none">
+        </div>
+        <p class="persist-note" id="persist-note"></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="./prefs.js?v=0.154"></script>
+    <script src="./db.js?v=0.154"></script>
+    <script src="./map.js?v=0.154"></script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+[
+  {
+    "key": "sfx_step",
+    "file": "./assets/sound/sfx/step.mp3",
+    "title": "Single Footsteps in Heels on a Hardwood Floor",
+    "author": "scriotxstudios",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/348661/"
+  },
+  {
+    "key": "sfx_thump",
+    "file": "./assets/sound/sfx/thump.mp3",
+    "title": "Thud / Falling on wooden floor / Snapping, breaking neck",
+    "author": "Breviceps",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/447922/"
+  },
+  {
+    "key": "amb_rain",
+    "file": "./assets/sound/amb/rain.mp3",
+    "title": "Silencyo_RAIN_NIGHT_Village_CloseUp_Drips_Gutter_MSd.aif",
+    "author": "silencyo",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/81729/"
+  },
+  {
+    "key": "sfx_scratch",
+    "file": "./assets/sound/sfx/scratch.mp3",
+    "title": "Scratching-door.wav",
+    "author": "HydrocityHarry",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/649881/"
+  },
+  {
+    "key": "amb_residential",
+    "file": "./assets/sound/amb/residential.mp3",
+    "title": "Crickets, very distant barks summer night.wav",
+    "author": "Daphne_in_Wonderland",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/383479/"
+  },
+  {
+    "key": "amb_water",
+    "file": "./assets/sound/amb/water.mp3",
+    "title": "Elbe riverside at night",
+    "author": "Kinoton",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/347436/"
+  },
+  {
+    "key": "amb_forest",
+    "file": "./assets/sound/amb/forest.mp3",
+    "title": "Japan_Kashiwa_Insects_Far_and_Upclose.wav",
+    "author": "RutgerMuller",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/365257/"
+  },
+  {
+    "key": "amb_tunnel",
+    "file": "./assets/sound/amb/tunnel.mp3",
+    "title": "ambience, metro, Komsomolskaya, passage, subway, Moscow",
+    "author": "AlexanderChe",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/727838/"
+  },
+  {
+    "key": "amb_room",
+    "file": "./assets/sound/amb/room.mp3",
+    "title": "Clocks.m4a",
+    "author": "Chilsville",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/620612/"
+  },
+  {
+    "key": "sfx_knock",
+    "file": "./assets/sound/sfx/knock.mp3",
+    "title": "Knock on door",
+    "author": "jankooiker",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/237937/"
+  },
+  {
+    "key": "sfx_heartbeat",
+    "file": "./assets/sound/sfx/heartbeat.mp3",
+    "title": "SLOW HEARTBEAT",
+    "author": "daandraait",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/249716/"
+  },
+  {
+    "key": "sfx_static",
+    "file": "./assets/sound/sfx/static.mp3",
+    "title": "Radio Static",
+    "author": "Tesseract31246",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/766954/"
+  },
+  {
+    "key": "sfx_ringing",
+    "file": "./assets/sound/sfx/ringing.mp3",
+    "title": "High pitched ringing.wav",
+    "author": "SpliceSound",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/188198/"
+  },
+  {
+    "key": "sfx_voice",
+    "file": "./assets/sound/sfx/voice.mp3",
+    "title": "Creepy Whispering",
+    "author": "RaspberryTickle",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/234044/"
+  },
+  {
+    "key": "sfx_rain",
+    "file": "./assets/sound/sfx/rain.mp3",
+    "title": "Cloud Burst.wav",
+    "author": "Sramon",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/614360/"
+  },
+  {
+    "key": "sfx_door",
+    "file": "./assets/sound/sfx/door.mp3",
+    "title": "Creaky Door Closing Slowly",
+    "author": "Rudmer_Rotteveel",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/590950/"
+  },
+  {
+    "key": "sfx_phone",
+    "file": "./assets/sound/sfx/phone.mp3",
+    "title": "Phone Old Landline Ringing",
+    "author": "robotjay",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/275163/"
+  },
+  {
+    "key": "sfx_child",
+    "file": "./assets/sound/sfx/child.mp3",
+    "title": "Creepy woman laughter with echo",
+    "author": "Feveryfox",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/779213/"
+  },
+  {
+    "key": "sfx_crossing",
+    "file": "./assets/sound/sfx/crossing.mp3",
+    "title": "Japanese Railway Level Crossing Electronic Beeping Loop.",
+    "author": "JotrainG",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/650317/"
+  },
+  {
+    "key": "sfx_breath",
+    "file": "./assets/sound/sfx/breath.mp3",
+    "title": "Young boy, frightened breathing.wav",
+    "author": "SpliceSound",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/260186/"
+  },
+  {
+    "key": "sfx_water",
+    "file": "./assets/sound/sfx/water.mp3",
+    "title": "Drop - Water",
+    "author": "mattfinarelli",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/533146/"
+  }
+]

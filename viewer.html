@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script src="./app-version.js?v=0.154"></script>
+    <title>‎</title><!-- タイトルすら見せない -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+    <meta name="theme-color" content="#030408">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=0.154">
+</head>
+<body>
+    <!-- 読書画面の背景画像（全作品共通・最背面） -->
+    <div id="read-bg" aria-hidden="true">
+        <!-- 背景のループ動画（読み込めない端末では下の画像のまま） -->
+        <video id="read-bg-video" muted loop playsinline autoplay preload="auto" disablepictureinpicture></video>
+    </div>
+    <!-- 街灯のゆらぎ用の暗幕（lamp.jsが濃さを動かす） -->
+    <div id="lamp-dim" aria-hidden="true"></div>
+
+    <!-- ユーザーのタップを促すスタート画面（Audio制限解除用） -->
+    <div id="start-screen">
+        <p>※ 音が出ます。イヤホン推奨。<br><br>― タップして、灯りをつける ―</p>
+        <p class="ss-warn">この先、灯りの点滅・暗転・突然の音があります。<br>光の点滅で体調を崩しやすい方は、設定の「怖さ」を「控えめ」にしてください。<br><span id="ss-level"></span></p>
+    </div>
+
+    <!-- 離脱導線（読書中いつでも戻れる。スタート画面後に出現） -->
+    <a id="exit-btn" href="./index.html" aria-label="やめる" title="やめる">✕</a>
+
+    <!-- 初回のみのスワイプ案内（縦書き右→左。一度スワイプで消える） -->
+    <div id="swipe-hint" aria-hidden="true">
+        <span class="sh-arrow">‹</span>
+        <span class="sh-text">左へ スワイプ</span>
+    </div>
+
+    <!-- 作品ごとの背景画像（最暗部レイヤー。bgImage指定時のみ表示） -->
+    <div id="bg-layer"></div>
+
+    <!-- 全画面エフェクト用オーバーレイ（FLASH / BLACKOUT） -->
+    <div id="fx-overlay"></div>
+
+    <!-- UI: スポットライトの光源（天井から照らしているイメージ） -->
+    <div id="light-source"></div>
+
+    <!-- 光の円錐ビームと床の照り返し -->
+    <div id="light-beam"></div>
+    <div id="floor-glow"></div>
+
+    <!-- 画面全体を覆う暗闇とスポットライトのフィルター -->
+    <div id="spotlight-overlay"></div>
+
+    <!-- 縦書きスクロール領域（中身はviewer.jsが構築する） -->
+    <main id="story-container"></main>
+
+    <!-- 出典エンドロール（読了後の「種明かし」。現実モード=横書き） -->
+    <div id="endroll">
+        <div class="er-inner">
+            <p class="er-title">── この話の、ほんとうのところ。</p>
+            <div id="er-facts"></div>
+            <p class="er-note" id="er-note"></p>
+            <div id="er-sound" class="er-sound" hidden></div>
+            <div id="er-rate" class="er-rate" hidden>
+                <p class="er-rate-label">この怪談は、こわかったですか</p>
+                <div id="er-stars" class="er-stars" role="radiogroup" aria-label="5段階で評価">
+                    <button class="er-star" data-v="1" aria-label="星1">★</button>
+                    <button class="er-star" data-v="2" aria-label="星2">★</button>
+                    <button class="er-star" data-v="3" aria-label="星3">★</button>
+                    <button class="er-star" data-v="4" aria-label="星4">★</button>
+                    <button class="er-star" data-v="5" aria-label="星5">★</button>
+                </div>
+                <p id="er-rate-thanks" class="er-rate-thanks" hidden>ありがとう。記録しました。</p>
+            </div>
+            <div class="er-actions">
+                <button id="er-share" class="er-btn">この場所の秘密を、誰かに教える</button>
+                <a href="./map.html" class="er-btn er-link">📍 この話を、地図にしまう</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="./config.js?v=0.154"></script>
+    <script src="./settings.js?v=0.154"></script>
+    <script src="./stories.js?v=0.154"></script>
+    <script src="./db.js?v=0.154"></script>
+    <script src="./sound_cues.js?v=0.154"></script>
+    <script src="./audio.js?v=0.154"></script>
+    <script src="./lamp.js?v=0.154"></script>
+    <script src="./scare.js?v=0.154"></script>
+    <script src="./candle.js?v=0.154"></script>
+    <script src="./narrator.js?v=0.154"></script>
+    <script src="./viewer.js?v=0.154"></script>
+</body>
+</html>

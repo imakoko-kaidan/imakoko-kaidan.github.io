@@ -1,0 +1,626 @@
+/* イマココ怪談 - ホーム/マップ共通スタイル */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+.hidden { display: none !important; }
+
+html { background-color: #030408; }   /* 最背面の保険色 */
+
+body {
+    background-color: transparent;     /* ホーム背景画像(#home-bg)を透けさせる */
+    background-image: radial-gradient(#0d0d12 1px, transparent 1px);
+    background-size: 4px 4px;
+    color: #c9c9c9;
+    font-family: "Shippori Mincho", "Noto Serif JP", serif;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; /* ダブルタップでの拡大を無効化 */
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* ---- ホーム背景画像（CSS Image Glitch：RGB色ずれのスライスが時々走る） ---- */
+#home-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    background: #030408 url("./assets/home_bg.jpg") center center / cover no-repeat;
+    animation: bg-glitch-base 6.5s steps(1, end) infinite;
+}
+/* 同じ画像を色付き＋オフセットで重ね、時々スライスして“色ずれ”を出す2層 */
+#home-bg::before,
+#home-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: inherit;          /* 同じ背景画像を継承 */
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+}
+#home-bg::before {                /* 赤寄せ・左へ */
+    filter: brightness(1.1) sepia(0.6) saturate(4) hue-rotate(-35deg);
+    animation: bg-glitch-r 6.5s steps(1, end) infinite;
+}
+#home-bg::after {                 /* シアン寄せ・右へ */
+    filter: brightness(1.1) sepia(0.6) saturate(4) hue-rotate(150deg);
+    animation: bg-glitch-c 6.5s steps(1, end) infinite;
+}
+@keyframes bg-glitch-base {
+    0%, 90%, 100% { transform: translateX(0); filter: none; }
+    91% { transform: translateX(3px);  filter: contrast(1.15) brightness(1.05); }
+    92% { transform: translateX(-2px); }
+    94% { transform: translateX(2px);  filter: hue-rotate(8deg); }
+    96% { transform: translateX(0);    filter: none; }
+}
+@keyframes bg-glitch-r {
+    0%, 90%, 100% { opacity: 0; clip-path: inset(50% 0 50% 0); transform: translateX(0); }
+    91% { opacity: .55; clip-path: inset(15% 0 60% 0); transform: translateX(-8px); }
+    93% { opacity: .50; clip-path: inset(62% 0 16% 0); transform: translateX(7px); }
+    95% { opacity: .55; clip-path: inset(38% 0 40% 0); transform: translateX(-5px); }
+    96% { opacity: 0; }
+}
+@keyframes bg-glitch-c {
+    0%, 90%, 100% { opacity: 0; clip-path: inset(50% 0 50% 0); transform: translateX(0); }
+    91% { opacity: .50; clip-path: inset(55% 0 20% 0); transform: translateX(8px); }
+    93% { opacity: .55; clip-path: inset(20% 0 58% 0); transform: translateX(-7px); }
+    95% { opacity: .50; clip-path: inset(42% 0 34% 0); transform: translateX(6px); }
+    96% { opacity: 0; }
+}
+/* 文字が読めるよう暗くする層（グリッチ層とは別に重ねる） */
+#home-dim {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to bottom,
+        rgba(3,4,8,0.72) 0%,
+        rgba(3,4,8,0.48) 38%,
+        rgba(3,4,8,0.66) 70%,
+        rgba(3,4,8,0.90) 100%);
+}
+
+/* ---- 環境演出レイヤー ---- */
+#noise-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 0;
+    opacity: 0.045; /* 極薄の砂嵐 */
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+#vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse 75% 75% at 50% 45%,
+        transparent 35%, rgba(0,0,0,0.55) 80%, rgba(0,0,0,0.92) 100%);
+}
+#dread-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+#dread-flash.show { opacity: 1; }
+
+/* ---- ホーム ---- */
+.home {
+    position: relative;
+    z-index: 3; /* 演出レイヤーより前面 */
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.6rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+.home h1 {
+    position: relative;
+    font-size: 1.7rem;
+    letter-spacing: 0.45em;
+    margin-left: 0.45em;
+    color: #e8e8e8;
+    text-shadow: 0 0 18px rgba(138, 180, 248, 0.3), 0 0 2px rgba(160, 30, 30, 0.4);
+    animation: title-flicker 8s infinite;
+}
+@keyframes title-flicker {
+    0%, 88%, 93%, 100% { opacity: 1; }
+    90% { opacity: 0.25; }
+    91% { opacity: 0.85; }
+    92% { opacity: 0.4; }
+}
+/* 赤い残像(常時かすかに) */
+.home h1::before {
+    content: "イマココ怪談";
+    position: absolute;
+    inset: 0;
+    color: transparent;
+    text-shadow: 1.5px 0 2px rgba(200, 30, 30, 0.45);
+    z-index: -1;
+    animation: title-ghost 6s ease-in-out infinite;
+}
+@keyframes title-ghost {
+    0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+    50% { transform: translate(-1px, 0); opacity: 0.8; }
+}
+/* JSで一瞬付与されるグリッチ */
+.home h1.glitch {
+    animation: title-glitch 0.32s steps(2) 1;
+}
+@keyframes title-glitch {
+    0% { transform: translate(0,0); text-shadow: -2px 0 1px rgba(0,255,255,0.5), 2px 0 1px rgba(255,0,0,0.5); }
+    25% { transform: translate(2px,-1px); }
+    50% { transform: translate(-2px,1px); text-shadow: 2px 0 1px rgba(0,255,255,0.5), -2px 0 1px rgba(255,0,0,0.5); }
+    75% { transform: translate(1px,1px); }
+    100% { transform: translate(0,0); }
+}
+.copy {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: #aab0ba;
+    line-height: 2.2;
+    letter-spacing: 0.12em;
+}
+
+.big-btn {
+    position: relative;
+    font-family: inherit;
+    font-size: 1.05rem;
+    letter-spacing: 0.18em;
+    color: #dfe6ff;
+    background: radial-gradient(ellipse at 50% 0%, #232c45, #141a2b);
+    border: 1px solid #3d4d77;
+    border-radius: 0;
+    /* サイバーパンク風に角を斜めにカット */
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    padding: 1.3em 2.4em;
+    cursor: pointer;
+    width: min(420px, 88vw);
+    transition: all 0.4s;
+    /* 微かに脈打つ(鼓動) */
+    animation: btn-breath 3.2s ease-in-out infinite;
+}
+/* ホバー時に出るシアン／マゼンタのグリッチ複製レイヤー(文字) */
+.big-btn::before,
+.big-btn::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+    letter-spacing: inherit;
+    opacity: 0;
+    pointer-events: none;
+    text-shadow: 0 0 6px currentColor;
+}
+@keyframes btn-breath {
+    0%, 100% { box-shadow: 0 0 8px rgba(120, 30, 40, 0.15); border-color: #3d4d77; }
+    50% { box-shadow: 0 0 22px rgba(150, 35, 45, 0.35); border-color: #5a4060; }
+}
+.big-btn:hover:not(:disabled) {
+    /* ホバー中は斜めジッターを繰り返す(サイバーパンク) */
+    animation: cyber-skew 0.5s steps(2, end) infinite;
+    color: #fff;
+    box-shadow: 0 0 30px rgba(0, 200, 255, 0.25), 0 0 30px rgba(255, 40, 90, 0.25), inset 0 0 24px rgba(120, 20, 30, 0.3);
+    border-color: #8a4a5a;
+    letter-spacing: 0.22em;
+}
+/* シアン層：左へ・スライスして明滅 */
+.big-btn:hover:not(:disabled)::before {
+    color: #00eaff;
+    opacity: 0.9;
+    animation: cyber-glitch-a 0.5s steps(2, end) infinite;
+}
+/* マゼンタ層：右へ・反対のスライス */
+.big-btn:hover:not(:disabled)::after {
+    color: #ff2d6b;
+    opacity: 0.9;
+    animation: cyber-glitch-b 0.5s steps(2, end) infinite;
+}
+@keyframes cyber-skew {
+    0%   { transform: translateX(0) skewX(0); }
+    20%  { transform: translateX(2px) skewX(-4deg); }
+    40%  { transform: translateX(-2px) skewX(4deg); }
+    60%  { transform: translateX(1px) skewX(-2deg); }
+    100% { transform: translateX(0) skewX(0); }
+}
+@keyframes cyber-glitch-a {
+    0%   { clip-path: inset(8% 0 78% 0);  transform: translate(-5px, -2px); }
+    20%  { clip-path: inset(58% 0 12% 0); transform: translate(5px, 2px); }
+    40%  { clip-path: inset(30% 0 46% 0); transform: translate(-4px, 0); }
+    60%  { clip-path: inset(72% 0 6% 0);  transform: translate(4px, 1px); }
+    80%  { clip-path: inset(44% 0 36% 0); transform: translate(-3px, -1px); }
+    100% { clip-path: inset(0 0 0 0);     transform: translate(0, 0); opacity: 0; }
+}
+@keyframes cyber-glitch-b {
+    0%   { clip-path: inset(70% 0 8% 0);  transform: translate(5px, 2px); }
+    20%  { clip-path: inset(15% 0 60% 0); transform: translate(-5px, -2px); }
+    40%  { clip-path: inset(48% 0 30% 0); transform: translate(4px, 0); }
+    60%  { clip-path: inset(10% 0 75% 0); transform: translate(-4px, 1px); }
+    80%  { clip-path: inset(36% 0 44% 0); transform: translate(3px, -1px); }
+    100% { clip-path: inset(0 0 0 0);     transform: translate(0, 0); opacity: 0; }
+}
+.big-btn:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.status {
+    min-height: 1.6em;
+    font-size: 0.82rem;
+    letter-spacing: 0.15em;
+    color: #666;
+}
+.status.tuning {
+    color: #8a93ad;
+    animation: tuning-blink 1.6s infinite;
+}
+@keyframes tuning-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+.status.error { color: #a05555; }
+.status.done { color: #b8c4e0; }
+
+.home-nav { width: min(420px, 88vw); }
+.home-nav .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    min-height: 52px;
+    width: 100%;
+    color: #aeb8d4;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    background: rgba(20, 24, 36, 0.55);
+    border: 1px solid #2c3242;
+    border-radius: 6px;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+}
+.home-nav .nav-link:hover,
+.home-nav .nav-link:active {
+    color: #e6ecff;
+    border-color: #5a6fa8;
+    background: rgba(28, 34, 52, 0.8);
+}
+/* 「集めた怪談の地図」ボタンにもサイバーパンクグリッチを適用 */
+.home-nav .nav-link {
+    position: relative;
+    border-radius: 0;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.home-nav .nav-link::before,
+.home-nav .nav-link::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+    letter-spacing: inherit;
+    opacity: 0;
+    pointer-events: none;
+    text-shadow: 0 0 6px currentColor;
+}
+.home-nav .nav-link:hover::before {
+    color: #00eaff;
+    opacity: 0.9;
+    animation: cyber-glitch-a 0.5s steps(2, end) infinite;
+}
+.home-nav .nav-link:hover::after {
+    color: #ff2d6b;
+    opacity: 0.9;
+    animation: cyber-glitch-b 0.5s steps(2, end) infinite;
+}
+.home-nav .nav-link:hover {
+    animation: cyber-skew 0.5s steps(2, end) infinite;
+}
+
+.pin-count {
+    font-size: 0.75rem;
+    color: #8e93a0;
+    letter-spacing: 0.2em;
+}
+
+.settings {
+    width: min(420px, 88vw);
+    text-align: left;
+    border: 1px solid #1c1f2a;
+    border-radius: 6px;
+    padding: 0.7rem 1rem;
+    background: rgba(15, 17, 24, 0.6);
+}
+.settings summary {
+    font-size: 0.78rem;
+    color: #666;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+}
+.settings label {
+    display: block;
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.8rem;
+}
+.settings input,
+.settings select {
+    display: block;
+    width: 100%;
+    margin-top: 0.4rem;
+    background: #07080c;
+    color: #ddd;
+    border: 1px solid #262b3a;
+    border-radius: 5px;
+    padding: 0.6em 0.7em;
+    font-family: inherit;
+    /* iOSは16px未満の入力欄にフォーカスすると自動拡大するため16px固定 */
+    font-size: 16px;
+}
+.settings label.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    cursor: pointer;
+    color: #aab0ba;
+}
+.settings label.toggle-row input {
+    display: inline-block;
+    width: auto;
+    margin: 0;
+    accent-color: #8a4a5a;
+    transform: scale(1.2);
+}
+.settings .note {
+    font-size: 0.68rem;
+    color: #555;
+    line-height: 1.8;
+    margin-top: 0.6rem;
+}
+
+footer p {
+    font-size: 0.7rem;
+    color: #80858f;
+    letter-spacing: 0.15em;
+}
+footer p.app-ver {
+    font-size: 0.62rem;
+    color: #333;
+    letter-spacing: 0.18em;
+    margin-top: 0.4rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- 診断ログパネル ---- */
+.log-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.7rem 0 0.5rem;
+}
+.log-output {
+    background: #04050a;
+    border: 1px solid #1c1f2a;
+    border-radius: 5px;
+    color: #7f8a6e;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.66rem;
+    line-height: 1.7;
+    padding: 0.6rem 0.7rem;
+    max-height: 220px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    user-select: text;
+    -webkit-user-select: text;
+}
+.log-output:empty::before {
+    content: "(まだログはありません)";
+    color: #3a3f4e;
+}
+
+/* ---- マップ画面 ---- */
+.map-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+}
+.map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1.2rem;
+}
+.map-header h1 {
+    font-size: 1rem;
+    letter-spacing: 0.3em;
+    color: #e0e0e0;
+}
+.map-header a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 88px;
+    padding: 0 1.1em;
+    color: #aeb8d4;
+    font-size: 0.85rem;
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    background: rgba(20, 24, 36, 0.55);
+    border: 1px solid #2c3242;
+    border-radius: 6px;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+}
+.map-header a:hover,
+.map-header a:active {
+    color: #e6ecff;
+    border-color: #5a6fa8;
+    background: rgba(28, 34, 52, 0.8);
+}
+
+#map {
+    height: 52dvh;
+    width: 100%;
+    background: #05060a;
+    border-top: 1px solid #1c1f2a;
+    border-bottom: 1px solid #1c1f2a;
+}
+/* 地理院タイルを「闇の地図」に反転 */
+#map .leaflet-tile {
+    filter: invert(1) hue-rotate(190deg) brightness(0.62) contrast(1.15) saturate(0.5);
+}
+#map .leaflet-control-attribution {
+    background: rgba(3, 4, 8, 0.75);
+    color: #666;
+}
+#map .leaflet-control-attribution a { color: #8a93ad; }
+/* ルート要素(.pin-marker)はLeafletが位置決めに使うので transform を当てない */
+.pin-marker.pin-active { z-index: 1000 !important; }
+/* 拡大・脈打ち・色は内側の glyph にのみ当てる */
+.pin-glyph {
+    display: block;
+    font-size: 22px;
+    line-height: 1;
+    transform-origin: 50% 90%; /* ピン先端を基準に拡大 */
+    filter: grayscale(0.7) brightness(0.85) drop-shadow(0 0 4px rgba(0, 0, 0, 0.6));
+    transition: filter 0.3s, transform 0.3s;
+}
+.pin-active .pin-glyph {
+    filter: drop-shadow(0 0 8px rgba(255, 60, 60, 0.95)) drop-shadow(0 0 16px rgba(255, 60, 60, 0.5));
+    animation: pin-pulse 1.4s ease-in-out infinite;
+}
+@keyframes pin-pulse {
+    0%, 100% { transform: scale(1.3); }
+    50% { transform: scale(1.5); }
+}
+#map .leaflet-popup-content-wrapper {
+    background: #12141c;
+    color: #ccc;
+    border: 1px solid #2c3242;
+    border-radius: 6px;
+    font-family: "Shippori Mincho", serif;
+}
+#map .leaflet-popup-tip { background: #12141c; }
+.popup-title { font-size: 0.9rem; color: #e8e8e8; margin-bottom: 0.2rem; }
+.popup-meta { font-size: 0.7rem; color: #777; margin-bottom: 0.5rem; }
+.popup-read {
+    display: inline-block;
+    color: #dfe6ff;
+    background: #25304d;
+    border-radius: 4px;
+    padding: 0.35em 1em;
+    font-size: 0.78rem;
+    text-decoration: none;
+    letter-spacing: 0.1em;
+}
+
+/* ピン一覧 */
+.pin-list {
+    flex: 1;
+    padding: 1rem 1.2rem 2rem;
+    max-width: 680px;
+    width: 100%;
+    margin: 0 auto;
+}
+.pin-list h2 {
+    font-size: 0.8rem;
+    color: #666;
+    letter-spacing: 0.25em;
+    margin-bottom: 0.8rem;
+}
+.pin-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    text-decoration: none;
+    color: inherit;
+    font-family: inherit;
+    border: 1px solid #1c1f2a;
+    border-radius: 6px;
+    background: rgba(16, 18, 26, 0.7);
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.7rem;
+    cursor: pointer;
+    transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+}
+.pin-item:hover { border-color: #3d4d77; }
+/* 地図で選択中の項目 */
+.pin-item.selected {
+    border-color: #b5485f;
+    background: rgba(40, 20, 26, 0.7);
+    box-shadow: 0 0 14px rgba(181, 72, 95, 0.25);
+}
+.pin-item.selected .pi-title { color: #f0d2d8; }
+.pin-item .pi-title {
+    font-size: 0.92rem;
+    color: #dfe2ec;
+    margin-bottom: 0.25rem;
+}
+.pin-item .pi-meta {
+    font-size: 0.72rem;
+    color: #666;
+    letter-spacing: 0.08em;
+}
+.pin-item .pi-tags { color: #8a93ad; }
+
+.empty-pins {
+    text-align: center;
+    color: #555;
+    font-size: 0.85rem;
+    line-height: 2.2;
+    padding: 2.5rem 0;
+    letter-spacing: 0.1em;
+}
+.empty-pins a { color: #8a93ad; }
+
+/* バックアップ操作 */
+.backup-bar {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0.4rem 1rem 2.2rem;
+}
+.backup-btn {
+    font-family: inherit;
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+    color: #999;
+    background: #12141c;
+    border: 1px solid #2c3242;
+    border-radius: 5px;
+    padding: 0.55em 1.2em;
+    cursor: pointer;
+}
+.backup-btn:hover { color: #fff; border-color: #4a5570; }
+.backup-btn-danger { color: #c98; border-color: #5a3030; }
+.backup-btn-danger:hover { color: #ffd9d0; border-color: #8a4040; background: #1c1214; }
+.persist-note {
+    text-align: center;
+    font-size: 0.68rem;
+    color: #4a4f5e;
+    letter-spacing: 0.1em;
+    padding-bottom: 1.5rem;
+}
+
+/* 記録一覧の絞り込み・並び替え（2026-10） */
+.pin-controls { display: flex; flex-wrap: wrap; gap: .6rem 1rem; margin: .2rem 0 .9rem; font-size: .8rem; color: #8a93ad; }
+.pin-controls select {
+    margin-left: .4em; background: #0c0f18; color: #cfd3e0; border: 1px solid #2c3242;
+    border-radius: 6px; padding: .3em .5em; font: inherit;
+}
+.pin-item .pi-stars { color: #b89a5a; font-size: .75em; letter-spacing: .05em; margin-left: .4em; white-space: nowrap; }
+.pi-group { color: #8a93ad; font-size: .78rem; letter-spacing: .2em; margin: 1rem 0 .3rem; border-bottom: 1px solid #1c2232; padding-bottom: .2rem; }
