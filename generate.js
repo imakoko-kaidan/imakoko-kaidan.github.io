@@ -876,6 +876,63 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     const savedKey = localStorage.getItem("imakoko_api_key");
     if (savedKey) apiKeyInput.value = savedKey;
 
+    // ---- APIキーの保存と判定(2026-10) ------------------------------------------
+    // 判定はモデル一覧を1件取るだけの通信で行う（文章を作らないので料金はかからない）
+    const keyStatus = document.getElementById("api-key-status");
+    const keySaveBtn = document.getElementById("api-key-save");
+    function showKeyStatus(cls, text) {
+        if (!keyStatus) return;
+        keyStatus.className = "key-status" + (cls ? " " + cls : "");
+        keyStatus.textContent = text;
+    }
+    const looksLikeKey = (k) => /^AIza[0-9A-Za-z_\-]{35}$/.test(k);
+    async function verifyKey(key) {
+        if (!/^https?:$/.test(location.protocol)) return { state: "warn", text: "この画面では通信できないため確認できません。ブラウザでサイトのURLを開いてください。" };
+        try {
+            const res = await fetch(`${GEMINI_API_BASE}/models?pageSize=1`, { headers: { "x-goog-api-key": key } });
+            if (res.ok) return { state: "ok", text: "✓ 有効なキーです。この端末に保存しました。" };
+            const body = await res.text();
+            if (/API_KEY_INVALID|API key not valid|API key expired/i.test(body) || res.status === 400) {
+                return { state: "ng", text: "✗ このキーは使えません（無効か期限切れ）。Google AI Studio でキーを確かめてください。" };
+            }
+            if (res.status === 403) return { state: "ng", text: "✗ このキーでは Gemini API が許可されていません（APIが無効、または利用制限）。" };
+            if (res.status === 429) return { state: "warn", text: "△ キーは届きましたが、いま利用回数の上限に達しています。少し待ってからお試しください。" };
+            return { state: "warn", text: `△ 確認できませんでした（エラー ${res.status}）。時間をおいてもう一度お試しください。` };
+        } catch (e) {
+            return { state: "warn", text: "△ 通信できず確認できませんでした。電波の良い場所でもう一度お試しください。" };
+        }
+    }
+    async function saveAndVerify() {
+        const key = apiKeyInput.value.trim();
+        if (!key) { showKeyStatus("ng", "APIキーを入力してください。"); return; }
+        localStorage.setItem("imakoko_api_key", key);
+        if (!looksLikeKey(key)) {
+            showKeyStatus("warn", "△ 保存しましたが、キーの形が見慣れません（通常は「AIza」で始まる39文字）。確認しています…");
+        } else {
+            showKeyStatus("", "確認しています…");
+        }
+        if (keySaveBtn) keySaveBtn.disabled = true;
+        const r = await verifyKey(key);
+        if (keySaveBtn) keySaveBtn.disabled = false;
+        showKeyStatus(r.state, r.text);
+        Logger.info("APIキーの確認", `${r.state}（末尾 ${key.slice(-4)}）`);
+    }
+    if (keySaveBtn) keySaveBtn.addEventListener("click", saveAndVerify);
+    apiKeyInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveAndVerify(); } });
+    // 入力中は形だけ見る（通信しない）
+    apiKeyInput.addEventListener("input", () => {
+        const k = apiKeyInput.value.trim();
+        if (!k) showKeyStatus("", "");
+        else if (looksLikeKey(k)) showKeyStatus("", "形はOKです。「保存して確認」を押すと、使えるキーか確かめます。");
+        else showKeyStatus("warn", "キーの形が違うようです（通常は「AIza」で始まる39文字）。");
+    });
+    // 開いたとき、保存済みのキーがあれば静かに確認して結果を表示
+    if (savedKey) {
+        showKeyStatus("", `保存済みのキー（末尾 ${savedKey.slice(-4)}）を確認しています…`);
+        verifyKey(savedKey).then(r => showKeyStatus(r.state, r.state === "ok"
+            ? `✓ 保存済みのキー（末尾 ${savedKey.slice(-4)}）は有効です。` : r.text));
+    }
+
     // モデル選択の復元・保存
     const modelSelect = document.getElementById("model-select");
     const savedModel = localStorage.getItem("imakoko_model");

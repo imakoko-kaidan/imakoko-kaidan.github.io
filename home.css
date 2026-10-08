@@ -631,3 +631,17 @@ footer p.app-ver {
 }
 .pin-item .pi-stars { color: #b89a5a; font-size: .75em; letter-spacing: .05em; margin-left: .4em; white-space: nowrap; }
 .pi-group { color: #8a93ad; font-size: .78rem; letter-spacing: .2em; margin: 1rem 0 .3rem; border-bottom: 1px solid #1c2232; padding-bottom: .2rem; }
+
+/* APIキー: 保存して確認ボタンと判定表示（2026-10） */
+.settings .key-row { display: flex; gap: .5rem; align-items: stretch; margin-top: .4rem; }
+.settings .key-row input { margin-top: 0; flex: 1; min-width: 0; }
+.settings .key-btn {
+    flex: none; font: inherit; font-size: .78rem; letter-spacing: .05em; white-space: nowrap;
+    padding: 0 .9em; border-radius: 5px; cursor: pointer;
+    background: #141a2b; color: #cfd6ea; border: 1px solid #3d4d77;
+}
+.settings .key-btn:disabled { opacity: .5; cursor: wait; }
+.settings .key-status { min-height: 1.2em; font-size: .74rem; line-height: 1.6; margin: .45rem 0 0; color: #888; }
+.settings .key-status.ok { color: #7fc59a; }
+.settings .key-status.ng { color: #e07a7a; }
+.settings .key-status.warn { color: #d9b56a; }
