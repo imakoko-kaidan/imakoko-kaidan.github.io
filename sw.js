@@ -11,12 +11,12 @@
  * spots.json(約5MB)は初回に一度だけ取得して保存（先読みはしない＝最初の表示を重くしない）。
  * VERSION は tools/bump_version.py / build_release.py が version.json に合わせて書き換える。
  */
-const VERSION = "0.158";
+const VERSION = "0.159";
 const CORE = "imakoko-core-" + VERSION;
 const RUNTIME = "imakoko-rt-" + VERSION;
 
 const PRECACHE = [
-    "./", "./index.html", "./viewer.html", "./map.html",
+    "./", "./index.html", "./viewer.html", "./map.html", "./terms.html", "./privacy.html",
     "./home.css", "./style.css", "./manifest.json",
     "./app-version.js", "./config.js", "./settings.js", "./prefs.js", "./db.js", "./home-fx.js",
     "./story_skeletons.js", "./sound_cues.js", "./generate.js", "./stories.js", "./audio.js",

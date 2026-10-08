@@ -645,3 +645,13 @@ footer p.app-ver {
 .settings .key-status.ok { color: #7fc59a; }
 .settings .key-status.ng { color: #e07a7a; }
 .settings .key-status.warn { color: #d9b56a; }
+
+/* 料金の目安の表（2026-10） */
+.settings .cost-table { width: 100%; border-collapse: collapse; margin: .9rem 0 .2rem; font-size: .74rem; color: #aab0ba; }
+.settings .cost-table caption { text-align: left; color: #888; font-size: .72rem; margin-bottom: .35rem; letter-spacing: .05em; }
+.settings .cost-table th, .settings .cost-table td { border: 1px solid #262b3a; padding: .4em .5em; text-align: center; }
+.settings .cost-table thead th { background: #0c0f18; color: #8a93ad; font-weight: normal; }
+.settings .cost-table tbody th { text-align: left; color: #aab0ba; font-weight: normal; }
+.settings .cost-table td:nth-child(2) { color: #7fc59a; }
+footer .legal-links a, .settings .note a { color: #8a93ad; text-decoration: none; border-bottom: 1px dotted #3a445c; }
+footer .legal-links { font-size: .7rem; letter-spacing: .1em; }

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script src="./app-version.js?v=0.159"></script>
+    <title>プライバシーポリシー｜イマココ怪談</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <meta name="theme-color" content="#030408">
+    <style>
+        body { margin: 0; background: #05070d; color: #c9cdd8; font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; line-height: 1.95; }
+        main { max-width: 720px; margin: 0 auto; padding: calc(1.6rem + env(safe-area-inset-top)) 1.3rem calc(3rem + env(safe-area-inset-bottom)); }
+        h1 { font-size: 1.15rem; letter-spacing: .15em; margin: .4rem 0 .2rem; color: #e6e8ef; }
+        h2 { font-size: .98rem; margin: 2rem 0 .5rem; padding-bottom: .25rem; border-bottom: 1px solid #222838; color: #dfe3ee; }
+        p, li { font-size: .88rem; }
+        ul { padding-left: 1.2rem; }
+        table { width: 100%; border-collapse: collapse; font-size: .8rem; margin: .5rem 0; }
+        th, td { border: 1px solid #262b3a; padding: .45em .55em; vertical-align: top; text-align: left; }
+        th { background: #0c0f18; color: #9aa3bd; font-weight: normal; white-space: nowrap; }
+        a { color: #8fa3d8; }
+        .meta { font-size: .78rem; color: #7d8394; }
+        .back { display: inline-block; margin-bottom: 1rem; font-size: .82rem; color: #aeb8d4; text-decoration: none; border: 1px solid #2c3242; border-radius: 6px; padding: .35em 1em; }
+        .summary { background: #0c0f18; border: 1px solid #262b3a; border-radius: 8px; padding: .8rem 1rem; }
+    </style>
+</head>
+<body>
+<main>
+    <a class="back" href="./index.html">← 戻る</a>
+    <h1>プライバシーポリシー</h1>
+    <p class="meta">イマココ怪談 運営（以下「運営」）／ 制定・施行：2026年10月8日</p>
+
+    <div class="summary">
+        <p><b>要点</b></p>
+        <ul>
+            <li>運営は、あなたのアカウント・氏名・メールアドレスを集めません。会員登録はありません。</li>
+            <li>作った怪談・位置・APIキーは、<b>あなたの端末の中だけ</b>に保存されます。運営のサーバーには送られません。</li>
+            <li>怪談を作るときは、位置をもとに外部のサービス（Google・国土地理院・OpenStreetMap・Wikipedia・天気）へ問い合わせます。</li>
+            <li>★評価を付けたときだけ、話の種類・星の数などを運営の集計表に送ります（本文・座標・個人を特定する情報は送りません）。</li>
+            <li>マイクは「息で消す」を使うときだけ使い、音は端末の中で強さを測るだけです。録音・送信はしません。</li>
+        </ul>
+    </div>
+
+    <h2>1. 扱う情報と使い道</h2>
+    <table>
+        <tr><th>情報</th><th>使い道</th><th>保存場所</th></tr>
+        <tr><td>位置情報（現在地、または手入力の座標）</td><td>その土地の事実を探し、怪談を作るため。地図に記録を表示するため</td><td>あなたの端末のみ</td></tr>
+        <tr><td>作った怪談・題名・都道府県・町名・評価</td><td>読み返し・地図表示・並べ替えのため</td><td>あなたの端末のみ</td></tr>
+        <tr><td>Gemini APIキー</td><td>あなた自身のキーで怪談・声を作るため</td><td>あなたの端末のみ（運営には送りません）</td></tr>
+        <tr><td>語り手の声の音声</td><td>2回目以降、料金をかけずに再生するため（最近の15話分まで）</td><td>あなたの端末のみ</td></tr>
+        <tr><td>設定（怖さ・推敲・声など）</td><td>次回も同じ設定で使うため</td><td>あなたの端末のみ</td></tr>
+        <tr><td>マイクの音</td><td>ろうそくを「息で消す」判定のため。音の強さと性質をその場で測るだけ</td><td>保存しません・送信しません</td></tr>
+        <tr><td>★評価のときに送る情報（話の骨格の種類・星の数・日時・スポット名・エリア名）</td><td>怖い話の作り方を改善するため</td><td>運営の集計表（Googleスプレッドシート）</td></tr>
+    </table>
+
+    <h2>2. 外部サービスへの送信</h2>
+    <p>本アプリは次のサービスを直接呼び出します。各サービスには、通信の性質上、あなたのIPアドレスやブラウザの情報も届きます。各サービスでの取り扱いは、それぞれのプライバシーポリシーに従います。</p>
+    <table>
+        <tr><th>サービス</th><th>送る内容</th><th>タイミング</th></tr>
+        <tr><td>Google Gemini API</td><td>町名・住所の手がかり・土地の事実・時間帯・季節・天気・作成の指示（座標そのものは送りません）。声を作るときは怪談の文章</td><td>怪談を作るとき・声を作るとき・APIキーを確認するとき</td></tr>
+        <tr><td>国土地理院（住所・地図タイル）</td><td>座標</td><td>怪談を作るとき・地図を開くとき</td></tr>
+        <tr><td>OpenStreetMap Nominatim</td><td>座標</td><td>怪談を作るとき</td></tr>
+        <tr><td>Wikipedia</td><td>座標・記事名</td><td>怪談を作るとき</td></tr>
+        <tr><td>Open-Meteo（天気）</td><td>約1km単位に丸めた座標</td><td>怪談を作るとき</td></tr>
+        <tr><td>Google Fonts／cdnjs</td><td>文字・地図部品の読み込み（通常のアクセス情報のみ）</td><td>画面を開くとき</td></tr>
+    </table>
+    <p><b>Gemini APIの無料枠について：</b>支払い方法を登録していない「無料枠」のキーで送った内容は、Googleの規約により、Googleのサービス改善に使われることがあります。</p>
+
+    <h2>3. シェア機能</h2>
+    <p>「この場所の秘密を、誰かに教える」を押すと、怪談の冒頭（約80字）・町名・<b>怪談を作った地点の地図リンク（正確な座標）</b>が、あなたが選んだ共有先に送られます。送るかどうかは、あなたが毎回決められます。</p>
+
+    <h2>4. Cookie・アクセス解析</h2>
+    <p>本アプリは、広告用のCookieやアクセス解析ツールを使っていません。表示を速くするため、ブラウザの保存機能（Service Worker・IndexedDB・localStorage）を使います。</p>
+
+    <h2>5. 第三者への提供</h2>
+    <p>運営は、集めた情報を第三者に販売・提供しません。ただし、法令に基づく場合を除きます。</p>
+
+    <h2>6. 情報の削除</h2>
+    <ul>
+        <li>端末の記録は、地図画面の「すべて削除」、またはブラウザの「サイトデータの削除」で消せます。</li>
+        <li>APIキーは、設定欄を空にして保存し直すか、サイトデータの削除で消せます。</li>
+        <li>集計表に送った★評価は個人と結びつかないため、個別の特定・削除はできません。</li>
+    </ul>
+
+    <h2>7. 年齢について</h2>
+    <p>本アプリはホラー表現（恐怖演出・暗転・突然の音）を含みます。13歳未満の方は保護者の同意のうえでご利用ください。</p>
+
+    <h2>8. 改定</h2>
+    <p>本ポリシーは必要に応じて改定します。大きな変更はアプリ内でお知らせします。</p>
+
+    <h2>9. お問い合わせ</h2>
+    <p>イマココ怪談 運営：<a href="https://github.com/imakoko-kaidan/imakoko-kaidan.github.io/issues" target="_blank" rel="noopener">お問い合わせ窓口（GitHub）</a></p>
+</main>
+</body>
+</html>

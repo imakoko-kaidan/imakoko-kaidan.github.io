@@ -904,7 +904,13 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
     }
     async function saveAndVerify() {
         const key = apiKeyInput.value.trim();
-        if (!key) { showKeyStatus("ng", "APIキーを入力してください。"); return; }
+        if (!key) {   // 空で押したら、保存済みのキーを消す（プライバシーポリシー6）
+            if (localStorage.getItem("imakoko_api_key")) {
+                localStorage.removeItem("imakoko_api_key");
+                showKeyStatus("", "保存されていたキーを、この端末から消しました。");
+            } else showKeyStatus("ng", "APIキーを入力してください。");
+            return;
+        }
         localStorage.setItem("imakoko_api_key", key);
         if (!looksLikeKey(key)) {
             showKeyStatus("warn", "△ 保存しましたが、キーの形が見慣れません（通常は「AIza」で始まる39文字）。確認しています…");
