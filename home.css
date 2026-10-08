@@ -119,6 +119,8 @@ body {
     justify-content: center;
     gap: 1.6rem;
     padding: 2rem 1.5rem;
+    padding-top: calc(2rem + env(safe-area-inset-top));
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
     text-align: center;
 }
 .home h1 {
@@ -441,6 +443,10 @@ footer p.app-ver {
     align-items: center;
     justify-content: space-between;
     padding: 0.8rem 1.2rem;
+    /* iPhoneの時刻・電池表示(ノッチ/ダイナミックアイランド)と重ならないよう、その高さぶん下げる(2026-10) */
+    padding-top: calc(0.8rem + env(safe-area-inset-top));
+    padding-left: max(1.2rem, env(safe-area-inset-left));
+    padding-right: max(1.2rem, env(safe-area-inset-right));
 }
 .map-header h1 {
     font-size: 1rem;
@@ -593,6 +599,7 @@ footer p.app-ver {
     justify-content: center;
     flex-wrap: wrap;
     padding: 0.4rem 1rem 2.2rem;
+    padding-bottom: calc(2.2rem + env(safe-area-inset-bottom));
 }
 .backup-btn {
     font-family: inherit;
