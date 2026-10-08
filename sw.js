@@ -11,7 +11,7 @@
  * spots.json(約5MB)は初回に一度だけ取得して保存（先読みはしない＝最初の表示を重くしない）。
  * VERSION は tools/bump_version.py / build_release.py が version.json に合わせて書き換える。
  */
-const VERSION = "0.156";
+const VERSION = "0.157";
 const CORE = "imakoko-core-" + VERSION;
 const RUNTIME = "imakoko-rt-" + VERSION;
 
