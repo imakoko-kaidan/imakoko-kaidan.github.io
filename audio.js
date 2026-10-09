@@ -81,7 +81,8 @@ const HorrorAudio = (() => {
         crossing: { pan: () => rnd(-0.4, 0.4),           rate: 0.0 },
         scratch:  { pan: () => rnd(0.65, 0.9) * side(),  rate: 0.05 },  // 片側から＝すぐ横にいる
         breath:   { pan: () => rnd(0.7, 0.95) * side(),  rate: 0.02 },  // 耳元
-        water:    { pan: () => rnd(-0.6, 0.6),           rate: 0.08 }
+        water:    { pan: () => rnd(-0.6, 0.6),           rate: 0.08 },
+        chime:    { pan: () => rnd(-0.3, 0.3),           rate: 0.0 }      // 夕方のチャイム（遠くの防災無線）
     };
 
     function loadBuffer(path) {
@@ -143,9 +144,10 @@ const HorrorAudio = (() => {
     const scratch = () => playSample("scratch");
     const breath = () => playSample("breath");
     const water = () => playSample("water");
+    const chime = () => playSample("chime");
 
     // ---- 公開API: 舞台の環境音（1話に1種類、小さくループ） ----------------
-    const AMBIENCES = ["rain", "residential", "water", "forest", "tunnel", "room"];
+    const AMBIENCES = ["rain", "residential", "water", "forest", "tunnel", "room", "apartment", "hospital", "railway", "alley"];
     async function startAmbience(name, fadeSec = 4) {
         if (!ensure() || !AMBIENCES.includes(name)) return;
         const buf = await loadBuffer(SOUND_BASE + "amb/" + name + ".mp3");
@@ -266,7 +268,7 @@ const HorrorAudio = (() => {
     return {
         init, thump, staticNoise, ringing, voice, rain, lampTick,
         silence, knock, footstep, spark, stopAll, fadeOut, resumeAll,
-        door, phone, child, crossing, scratch, breath, water, heartbeat,
+        door, phone, child, crossing, scratch, breath, water, heartbeat, chime,
         preload, startAmbience, AMBIENCES, unsilence,
         get isSilenced() { return silenced; },
         get context() { return ctx; }

@@ -350,6 +350,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const used = new Set(["amb_" + amb, ...usedSfxNames().map(n => "sfx_" + n)]);
             const KIND = { amb_rain: "環境音（雨の夜）", amb_residential: "環境音（夜の住宅街）", amb_water: "環境音（水辺）",
                 amb_forest: "環境音（山・林）", amb_tunnel: "環境音（地下道）", amb_room: "環境音（深夜の部屋）",
+                amb_apartment: "環境音（団地の廊下）", amb_hospital: "環境音（古い建物の中）", amb_railway: "環境音（線路沿い）", amb_alley: "環境音（夜の裏路地）", sfx_chime: "夕方のチャイム",
                 sfx_thump: "落下音", sfx_heartbeat: "鼓動", sfx_step: "足音", sfx_static: "砂嵐", sfx_ringing: "耳鳴り", sfx_voice: "ささやき", sfx_rain: "強まる雨",
                 sfx_knock: "ノック", sfx_footstep: "足音", sfx_door: "ドア", sfx_phone: "電話", sfx_child: "笑い声",
                 sfx_crossing: "踏切", sfx_scratch: "ひっかく音", sfx_breath: "息づかい", sfx_water: "水滴" };
@@ -374,7 +375,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         "[SOUND:THUMP]": "thump", "[SOUND:HEARTBEAT]": "heartbeat", "[SOUND:STATIC]": "static", "[SOUND:NOISE]": "static",
         "[SOUND:RINGING]": "ringing", "[SOUND:VOICE]": "voice", "[SOUND:RAIN]": "rain", "[SOUND:KNOCK]": "knock",
         "[SOUND:FOOTSTEP]": "step", "[SOUND:DOOR]": "door", "[SOUND:PHONE]": "phone", "[SOUND:CHILD]": "child",
-        "[SOUND:CROSSING]": "crossing", "[SOUND:SCRATCH]": "scratch", "[SOUND:BREATH]": "breath", "[SOUND:WATER]": "water"
+        "[SOUND:CROSSING]": "crossing", "[SOUND:SCRATCH]": "scratch", "[SOUND:BREATH]": "breath", "[SOUND:WATER]": "water", "[SOUND:CHIME]": "chime"
     };
     function usedSfxNames() {
         const set = new Set();
@@ -387,11 +388,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (st.ambience && list.includes(st.ambience)) return st.ambience;
         const text = (st.lines || []).join("");
         const rules = [
-            ["tunnel", /地下道|地下通路|トンネル|地下駐車場|構内|ホーム|改札|高架下/],
+            ["railway", /線路|踏切|電車|列車|終電|ホーム|鉄橋|貨物/],
+            ["hospital", /病院|病棟|診察|医院|廃病院|廃校|校舎|廃墟/],
+            ["tunnel", /地下道|地下通路|トンネル|地下駐車場|構内|改札|高架下/],
             ["water", /川|河原|河川|池|沼|海|浜|港|堤防|橋の下|水辺|用水路/],
             ["forest", /山道|山中|森|林|神社|鳥居|祠|寺|墓地|墓|参道|石段/],
             ["rain", /雨|傘|濡れ/],
-            ["room", /部屋|自室|寝室|布団|押し入れ|天井|アパート|マンション|団地|廊下/]
+            ["apartment", /団地|アパート|マンション|共用廊下|外廊下|階段の踊り場|エレベーター/],
+            ["alley", /路地|裏通り|飲み屋|繁華街|歓楽街|スナック|ネオン|駅前/],
+            ["room", /部屋|自室|寝室|布団|押し入れ|天井|廊下/]
         ];
         for (const [k, re] of rules) if (re.test(text)) return k;
         return "residential";
@@ -660,6 +665,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             case "[SOUND:SCRATCH]":  HorrorAudio.scratch(); break;
             case "[SOUND:BREATH]":   HorrorAudio.breath(); break;
             case "[SOUND:WATER]":    HorrorAudio.water(); break;
+            case "[SOUND:CHIME]":    HorrorAudio.chime(); break;
 
             // ===== 視覚 =====
             case "[VISUAL:SHAKE]":

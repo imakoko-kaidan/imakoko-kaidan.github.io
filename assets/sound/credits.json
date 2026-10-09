@@ -1,5 +1,50 @@
 [
   {
+    "key": "amb_railway",
+    "file": "./assets/sound/amb/railway.mp3",
+    "title": "8 Freight Train.aiff",
+    "author": "filmsndfx",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/351919/"
+  },
+  {
+    "key": "amb_apartment",
+    "file": "./assets/sound/amb/apartment.mp3",
+    "title": "Concrete Hallway with Air Conditioner",
+    "author": "ecfike",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/474458/"
+  },
+  {
+    "key": "amb_hospital",
+    "file": "./assets/sound/amb/hospital.mp3",
+    "title": "hospital corridor low ceiling consultation rooms conversations with pa",
+    "author": "kyles",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/451883/"
+  },
+  {
+    "key": "amb_alley",
+    "file": "./assets/sound/amb/alley.mp3",
+    "title": "alley downtown ambience 01.wav",
+    "author": "klankbeeld",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/171425/"
+  },
+  {
+    "key": "sfx_chime",
+    "file": "./assets/sound/sfx/chime.mp3",
+    "title": "Hatoyama Chime 4:55pm",
+    "author": "mateo2322",
+    "license": "CC0 1.0",
+    "source": "Freesound",
+    "url": "https://freesound.org/s/812140/"
+  },
+  {
     "key": "sfx_step",
     "file": "./assets/sound/sfx/step.mp3",
     "title": "Single Footsteps in Heels on a Hardwood Floor",

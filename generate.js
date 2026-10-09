@@ -553,17 +553,17 @@ ${variety.block}
 **禁止: 文末の「〜そうです／〜だそうです／〜とのことです」。** 伝聞は冒頭の枠で一度だけ。本文は過去形で言い切る。
 【演出タグ（控えめに・内容と合わせる）】
 - 使えるのは次の種類のみ。必ず単独行で、**その出来事を書いた行の直後**に置く:
-  [SOUND:THUMP] [SOUND:HEARTBEAT] [SOUND:STATIC] [SOUND:RINGING] [SOUND:VOICE] [SOUND:RAIN] [SOUND:SILENCE] [SOUND:KNOCK] [SOUND:FOOTSTEP] [SOUND:DOOR] [SOUND:PHONE] [SOUND:CHILD] [SOUND:CROSSING] [SOUND:SCRATCH] [SOUND:BREATH] [SOUND:WATER] [VISUAL:SHAKE] [VISUAL:FLASH] [VISUAL:BLACKOUT] [VISUAL:BLINK] [VISUAL:GHOST] [VISUAL:STREETLIGHT_FLICKER]
+  [SOUND:THUMP] [SOUND:HEARTBEAT] [SOUND:STATIC] [SOUND:RINGING] [SOUND:VOICE] [SOUND:RAIN] [SOUND:SILENCE] [SOUND:KNOCK] [SOUND:FOOTSTEP] [SOUND:DOOR] [SOUND:PHONE] [SOUND:CHILD] [SOUND:CROSSING] [SOUND:SCRATCH] [SOUND:BREATH] [SOUND:WATER] [SOUND:CHIME] [VISUAL:SHAKE] [VISUAL:FLASH] [VISUAL:BLACKOUT] [VISUAL:BLINK] [VISUAL:GHOST] [VISUAL:STREETLIGHT_FLICKER]
 - **音のタグ([SOUND:..])は、直前の行にその音が“書かれている”ときだけ**置く。本文に無い音を鳴らして脅かすのは禁止（意図が透けて冷める）。
   - 音の場面は、擬音で書くと効く: 「コン、コン。」「カツッ……カツッ……」「ギィ、と戸が鳴った」「ぽたり、と落ちた」。その行の直後に対応するタグを置く。足音の擬音は数えて鳴らすので、聞かせたい歩数だけ書く。
   - **「しん、と静まり返った」「音が消えた」など無音の場面には [SOUND:SILENCE]** を置く（環境音がピタッと止まる）。無音は数に含めない。
 - 数は絞る: **無音以外で1話に合計2〜3個まで**。出しすぎは雰囲気を壊す。無くてよい場面には入れない。
 - 置かない場所: **静かな冒頭の数行と、結末(余韻)の数行には入れない**。
-- 内容と合わせる: 足音→FOOTSTEP、雨の描写→RAIN、しんと静まる瞬間→SILENCE、戸を叩く→KNOCK、耳鳴り→RINGING、背後の声/ささやき→VOICE、砂嵐/ノイズ→STATIC、何かが落ちる/倒れる重い音→THUMP、鼓動→HEARTBEAT、戸がきしんで開く/閉まる→DOOR、電話が鳴る→PHONE、笑い声→CHILD、踏切の警報→CROSSING、壁や戸をひっかく→SCRATCH、すぐそばの息づかい→BREATH、水がぽたりと落ちる→WATER。描写と無関係な演出は入れない。
+- 内容と合わせる: 足音→FOOTSTEP、雨の描写→RAIN、しんと静まる瞬間→SILENCE、戸を叩く→KNOCK、耳鳴り→RINGING、背後の声/ささやき→VOICE、砂嵐/ノイズ→STATIC、何かが落ちる/倒れる重い音→THUMP、鼓動→HEARTBEAT、戸がきしんで開く/閉まる→DOOR、電話が鳴る→PHONE、笑い声→CHILD、踏切の警報→CROSSING、壁や戸をひっかく→SCRATCH、すぐそばの息づかい→BREATH、水がぽたりと落ちる→WATER、夕方のチャイム・防災無線の音楽→CHIME。描写と無関係な演出は入れない。
 - **強い演出([VISUAL:BLACKOUT]/[VISUAL:BLINK]/[VISUAL:FLASH]/[VISUAL:SHAKE])は、手遅れの決定的な一瞬に1回だけ**。乱発しない。([VISUAL:BLINK]=画面が完全に真っ暗に明滅する)
 [/STORY]
 [META]
-{"title": "ピン一覧用の短い題(12字以内・ネタバレ禁止)", "tags": ["状況タグを3〜4個"], "usedAnchors": [使った錨の番号の配列。例: [1,3]], "shareText": "ネタバレなしで土地の事実を一片だけ含む共有文(60字以内)", "ambience": "話の舞台に最も合う環境音を次から1つ: rain(雨の夜) / residential(静かな住宅街・夜道) / water(川・池・海などの水辺) / forest(山・林・神社・墓地) / tunnel(地下道・トンネル・駅の構内・地下駐車場) / room(部屋の中・屋内の深夜)"}
+{"title": "ピン一覧用の短い題(12字以内・ネタバレ禁止)", "tags": ["状況タグを3〜4個"], "usedAnchors": [使った錨の番号の配列。例: [1,3]], "shareText": "ネタバレなしで土地の事実を一片だけ含む共有文(60字以内)", "ambience": "話の舞台に最も合う環境音を次から1つ: rain(雨の夜) / residential(静かな住宅街・夜道) / water(川・池・海などの水辺) / forest(山・林・神社・墓地) / tunnel(地下道・トンネル・駅の構内・地下駐車場) / room(部屋の中・屋内の深夜) / apartment(団地・アパート・マンションの廊下や階段) / hospital(病院・学校・廃墟など古い建物の中) / railway(線路沿い・踏切・駅のホーム) / alley(繁華街の裏路地・飲み屋街・駅前の夜)"}
 [/META]`;
     return { prompt, skeleton: variety.skeleton };
 }
@@ -760,7 +760,7 @@ function validateSoundTags(lines) {
 
 // ---------- 応答パース ----------
 
-const AMBIENCES = ["rain", "residential", "water", "forest", "tunnel", "room"];
+const AMBIENCES = ["rain", "residential", "water", "forest", "tunnel", "room", "apartment", "hospital", "railway", "alley"];
 
 // ---------- 2026-10: 季節・いまの天気 ----------
 function seasonOf(d) {
