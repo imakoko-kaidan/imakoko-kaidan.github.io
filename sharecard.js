@@ -119,6 +119,13 @@
         drawVertical(g, hookSentence(story, o.timeWord), W - 250, 190, 44, 820, 26, 4);
         g.shadowBlur = 0;
 
+        // 左上: ロゴ（文字は図形化済みなのでフォントの読み込みに左右されない）
+        const logo = await loadImage("./assets/logo.svg");
+        if (logo) {
+            const lh = 340, lw = lh * 264 / 424;
+            g.drawImage(logo, 70, 86, lw, lh);
+        }
+
         // 下の帯: どこで生まれた話か・タグ・URL
         const place = [story.prefecture, story.placeName].filter(v => v && v !== "名前のない場所").join(" ");
         g.textAlign = "left";

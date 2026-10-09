@@ -11,7 +11,7 @@
  * spots.json(約5MB)は初回に一度だけ取得して保存（先読みはしない＝最初の表示を重くしない）。
  * VERSION は tools/bump_version.py / build_release.py が version.json に合わせて書き換える。
  */
-const VERSION = "0.164";
+const VERSION = "0.165";
 const CORE = "imakoko-core-" + VERSION;
 const RUNTIME = "imakoko-rt-" + VERSION;
 
@@ -23,7 +23,7 @@ const PRECACHE = [
     "./lamp.js", "./scare.js", "./candle.js", "./narrator.js", "./viewer.js", "./map.js",
     "./assets/home_bg.jpg", "./assets/read_bg.jpg", "./assets/icon-192.png", "./assets/apple-touch-icon.png",
     "./assets/scare/cat_sit.jpg", "./assets/scare/cat_lie.jpg", "./assets/scare/woman_front.jpg", "./assets/scare/woman_bowed.jpg",
-    "./assets/sound/credits.json", "./assets/qr_site.png"
+    "./assets/sound/credits.json", "./assets/qr_site.png", "./assets/logo.svg", "./favicon.svg"
 ];
 
 self.addEventListener("install", (e) => {

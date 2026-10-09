@@ -163,6 +163,65 @@ body {
     75% { transform: translate(1px,1px); }
     100% { transform: translate(0,0); }
 }
+/* ---- ロゴ（2026-10・縦組み／ピンの先から裂け目）。形は tools/build_logo.py が index.html に埋め込む ----
+   出る順: 怪 → イマココ → ピンが刺さる → 先から裂ける → 談がずれて現れる → 目が開く → 以後ときどき瞬き */
+.home h1.logo { letter-spacing: 0; margin-left: 0; line-height: 0; text-shadow: none; }
+.home h1.logo::before { content: none; }
+.home h1.logo.glitch { filter: drop-shadow(-2px 0 0 rgba(0,255,255,.45)) drop-shadow(2px 0 0 rgba(255,0,0,.45)); }
+.logo-svg {
+    width: min(44vw, 168px);
+    height: auto;
+    overflow: visible;
+    filter: drop-shadow(0 0 14px rgba(138, 180, 248, 0.18));
+}
+.logo-svg .lg-kai   { animation: lg-kai 1s ease-out .2s both; }
+.logo-svg .lg-c     { animation: lg-c .4s ease-out both; animation-delay: calc(.8s + var(--i) * .14s); }
+.logo-svg .lg-pin   { animation: lg-pin .55s cubic-bezier(.55,0,.8,.2) 1.5s both; }
+.logo-svg .lg-crack { transform-box: view-box; transform-origin: 110px 245.7px;
+                      filter: drop-shadow(0 0 2.5px rgba(208,22,50,.8));
+                      animation: lg-crack .45s cubic-bezier(.2,.9,.3,1) 2s both, lg-glow 5s ease-in-out 3s infinite; }
+.logo-svg .lg-dan   { transform: translate(5px, 2px); animation: lg-dan .7s ease-out 2.1s both; }
+.logo-svg .lg-slit  { transform-box: fill-box; transform-origin: center;
+                      animation: lg-open .35s ease-out 2.75s both, lg-blink 7s ease-in-out 4.5s infinite; }
+.logo-svg .lg-latin { animation: lg-fade .8s ease-out 3s both; }
+
+@keyframes lg-kai {
+    0%   { opacity: 0; filter: blur(6px); }
+    30%  { opacity: .7; }
+    38%  { opacity: .15; }
+    50%  { opacity: .9; filter: blur(1px); }
+    100% { opacity: 1; filter: blur(0); }
+}
+@keyframes lg-c    { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@keyframes lg-pin  {
+    0%   { opacity: 0; transform: translateY(-70px); }
+    70%  { opacity: 1; transform: translateY(2px); }
+    85%  { transform: translateY(-1px); }
+    100% { opacity: 1; transform: none; }
+}
+@keyframes lg-crack { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes lg-glow  { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+@keyframes lg-dan   {
+    0%   { opacity: 0; transform: translate(0, 0); }
+    35%  { opacity: 1; transform: translate(0, 0); }
+    50%  { transform: translate(8px, 3px); }
+    62%  { transform: translate(3px, 1px); }
+    100% { opacity: 1; transform: translate(5px, 2px); }
+}
+@keyframes lg-open  { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* 瞬き → 少し横を見る → 戻る */
+@keyframes lg-blink {
+    0%, 60%, 100% { transform: none; }
+    62%  { transform: scaleX(.1); }
+    64%  { transform: none; }
+    78%  { transform: translateX(-4px); }
+    90%  { transform: translateX(-4px); }
+}
+@keyframes lg-fade  { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+    .logo-svg *, .home h1.logo { animation: none !important; }
+}
+
 .copy {
     margin-top: 1rem;
     font-size: 0.85rem;
