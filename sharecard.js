@@ -3,7 +3,7 @@
  *
  * 端末の中（canvas）で 1080×1350（縦長 4:5。X・Instagram・LINEでそのまま見やすい）の画像を作る。
  *  - 背景: 読む画面と同じ街灯の闇
- *  - 右から縦書き: 題 → 本文の最初の一文
+ *  - 右から縦書き: 題 → 前置きの次の一文（本題の始まり）
  *  - 下: 「◯◯のあたりで、この話が生まれた。」・#イマココ怪談・URL
  * 外部にはどこにも送らない（作った画像をどう使うかは本人がシェア画面で決める）。
  *
@@ -61,10 +61,19 @@
         return col;
     }
 
-    function firstSentence(story, timeWord) {
+    // 語り手の前置き（「この土地の古い時間を拾い集めていると…」「◯◯から聞いた話がある」）らしい文
+    const FRAME = /聞き集め|拾い集め|尋ねて|尋ね歩|行き当たる|突き当たる|話がある|聞いた話|から聞いた|聞かせてくれ|話してくれ|伝わって|伝わる話|言い伝え|辿る|辿ると|掘り起こ|この町のこと|この土地の|仮に.{1,4}としておく|という。$|だという。$|といいます。$|だそうです。$|経験した|体験した/;
+
+    /** カードに載せる一文: 前置きを飛ばして、本題に入った最初の一文（2026-10・企画者判断B） */
+    function hookSentence(story, timeWord) {
         const lines = (story.lines || []).map(l => String(l || "").trim())
             .filter(l => l && !/^\[(SOUND|VISUAL):[A-Z_]+\]$/.test(l));
-        const t = (lines[0] || "").replaceAll("{{TIME}}", timeWord || "宵");
+        let pick = "";
+        for (let i = 1; i < Math.min(lines.length, 5); i++) {
+            if (!FRAME.test(lines[i])) { pick = lines[i]; break; }
+        }
+        if (!pick) pick = lines[2] || lines[1] || lines[0] || "";
+        const t = pick.replaceAll("{{TIME}}", timeWord || "宵");
         return t.length > 70 ? t.slice(0, 68) + "……" : t;
     }
 
@@ -107,7 +116,7 @@
         g.shadowBlur = 10; g.shadowColor = "rgba(200,215,255,.35)";
         g.font = `44px ${FONT}`;
         g.fillStyle = "#d9dde8";
-        drawVertical(g, firstSentence(story, o.timeWord), W - 250, 190, 44, 820, 26, 4);
+        drawVertical(g, hookSentence(story, o.timeWord), W - 250, 190, 44, 820, 26, 4);
         g.shadowBlur = 0;
 
         // 下の帯: どこで生まれた話か・タグ・URL
@@ -135,5 +144,5 @@
         return await new Promise(res => c.toBlob(b => res(b), "image/jpeg", 0.88));
     }
 
-    window.ImakokoShareCard = { make, W, H };
+    window.ImakokoShareCard = { make, hookSentence, W, H };
 })();
