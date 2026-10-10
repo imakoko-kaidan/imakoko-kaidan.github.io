@@ -169,7 +169,7 @@ body {
 .home h1.logo::before { content: none; }
 .home h1.logo.glitch { filter: drop-shadow(-2px 0 0 rgba(0,255,255,.45)) drop-shadow(2px 0 0 rgba(255,0,0,.45)); }
 .logo-svg {
-    width: min(44vw, 168px);
+    width: min(48vw, 184px);   /* 横幅に左右対称の余白を足したので、文字の大きさは前と同じ */
     height: auto;
     overflow: visible;
     filter: drop-shadow(0 0 14px rgba(138, 180, 248, 0.18));
@@ -177,7 +177,9 @@ body {
 .logo-svg .lg-kai   { animation: lg-kai 1s ease-out .2s both; }
 .logo-svg .lg-c     { animation: lg-c .4s ease-out both; animation-delay: calc(.8s + var(--i) * .14s); }
 .logo-svg .lg-pin   { animation: lg-pin .55s cubic-bezier(.55,0,.8,.2) 1.5s both; }
-.logo-svg .lg-crack { transform-box: view-box; transform-origin: 110px 245.7px;
+.logo-svg .lg-crack-r { transform-origin: 0% 50%; }      /* ピンの先(各裂け目の根元)から伸びる */
+.logo-svg .lg-crack-l { transform-origin: 100% 50%; }
+.logo-svg .lg-crack { transform-box: fill-box;
                       filter: drop-shadow(0 0 2.5px rgba(208,22,50,.8));
                       animation: lg-crack .45s cubic-bezier(.2,.9,.3,1) 2s both, lg-glow 5s ease-in-out 3s infinite; }
 .logo-svg .lg-dan   { transform: translate(5px, 2px); animation: lg-dan .7s ease-out 2.1s both; }

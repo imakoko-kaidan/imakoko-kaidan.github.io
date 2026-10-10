@@ -122,8 +122,8 @@
         // 左上: ロゴ（文字は図形化済みなのでフォントの読み込みに左右されない）
         const logo = await loadImage("./assets/logo.svg");
         if (logo) {
-            const lh = 340, lw = lh * 264 / 424;
-            g.drawImage(logo, 70, 86, lw, lh);
+            const lh = 340, lw = lh * 288 / 424;
+            g.drawImage(logo, 46, 86, lw, lh);
         }
 
         // 下の帯: どこで生まれた話か・タグ・URL
