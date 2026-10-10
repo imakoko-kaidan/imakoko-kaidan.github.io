@@ -745,3 +745,10 @@ footer p.app-ver {
 .settings .cost-table td:nth-child(2) { color: #7fc59a; }
 footer .legal-links a, .settings .note a { color: #8a93ad; text-decoration: none; border-bottom: 1px dotted #3a445c; }
 footer .legal-links { font-size: .7rem; letter-spacing: .1em; }
+
+/* テスト用：いわくのある場所ボタン（2026-10-10・一般公開前に削除） */
+.iwaku-samples { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 8px; }
+.iwaku-samples .is-label { width: 100%; font-size: 11px; color: #a0485a; letter-spacing: .05em; }
+.iwaku-samples button { font: inherit; font-size: 12px; padding: 6px 10px; min-height: 36px; border-radius: 6px;
+    border: 1px solid rgba(160, 72, 90, .45); background: rgba(160, 72, 90, .08); color: #d8c9cd; cursor: pointer; }
+.iwaku-samples button:active { background: rgba(160, 72, 90, .25); }
