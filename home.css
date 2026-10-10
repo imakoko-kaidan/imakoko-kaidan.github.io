@@ -348,6 +348,15 @@ body {
 .status.done { color: #b8c4e0; }
 
 .home-nav { width: min(420px, 88vw); }
+/* アプリ自体を教えるボタン（2026-10・app_share.js） */
+.share-app-btn { display: block; margin: 0.7rem auto 0; min-height: 44px; padding: 0 1.4em; background: transparent;
+    border: 1px solid rgba(150, 160, 190, 0.25); border-radius: 999px; color: #8f98b3; font: inherit; font-size: 0.82rem;
+    letter-spacing: 0.15em; cursor: pointer; }
+.share-app-btn:hover, .share-app-btn:active { color: #cfd6ea; border-color: rgba(170, 190, 230, 0.5); }
+#app-share-panel { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-top: 0.7rem; }
+#app-share-panel .as-btn { min-height: 40px; padding: 0 1.1em; display: inline-flex; align-items: center; border-radius: 8px;
+    background: rgba(28, 34, 51, .8); border: 1px solid #3a4360; color: #e3e6ee; font: inherit; font-size: 0.8rem; text-decoration: none; cursor: pointer; }
+#app-share-panel .as-close { flex-basis: 100%; background: none; border: 0; color: #6a7080; font: inherit; font-size: 0.75rem; cursor: pointer; padding: .4em; }
 .home-nav .nav-link {
     display: flex;
     align-items: center;
