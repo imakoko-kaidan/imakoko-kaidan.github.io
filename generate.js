@@ -155,6 +155,80 @@ async function reverseGeocode(lat, lon) {
 }
 
 /** Wikipedia: 周辺記事の冒頭を取得(近い順。CC BY-SA、出典リンクをcreditsに残す) */
+// ---------- 2026-10-10: いわくを探しに行く（Wikipediaの「座標の近く×怖い言葉」検索） ----------
+// 近い記事を取るだけだと駅・学校ばかりになるため、祟り・供養・処刑・事故などの言葉を含む近くの記事を探し、
+// 該当する一節を「いわく」の錨にする。点数（いわくの濃さ）で並べ、濃いものを話の芯に回す。
+// テスト中（企画者判断 2026-10-10）: 事件・事故・死をぼかさずに使う → IWAKU_UNBLURRED。戻すときは false に。
+const IWAKU_UNBLURRED = true;
+const IWAKU_WORDS = [
+    ["祟", 6], ["怨霊", 6], ["亡霊", 6], ["幽霊", 6], ["心霊", 5], ["怪談", 5], ["怪異", 5], ["妖怪", 4], ["呪", 5],
+    ["処刑", 5], ["刑場", 5], ["晒し首", 5], ["首塚", 5], ["生き埋め", 5], ["人柱", 6], ["投げ込み", 4], ["無縁", 4],
+    ["遺体", 4], ["死体", 4], ["殺害", 4], ["殺人", 4], ["心中", 4], ["自殺", 4], ["溺死", 4], ["水死", 4], ["焼死", 4],
+    ["事故", 3], ["事件", 3], ["惨事", 4], ["空襲", 3], ["震災", 3], ["火災", 2], ["水難", 4], ["疫病", 3],
+    ["供養", 3], ["慰霊", 3], ["鎮魂", 3], ["塚", 2], ["墓", 2], ["怪", 1],
+    ["噂", 4], ["言い伝え", 3], ["伝承", 2], ["いわく", 4], ["曰く", 3], ["化け", 3], ["狐", 2], ["狸", 2], ["河童", 3], ["鬼", 2],
+    ["井戸", 2], ["沼", 1], ["淵", 2], ["池", 1]
+];
+const IWAKU_QUERY = "祟り OR 幽霊 OR 怨霊 OR 心霊 OR 処刑 OR 刑場 OR 首塚 OR 人柱 OR 供養塔 OR 慰霊 OR 事故 OR 事件 OR 心中 OR 噂 OR 言い伝え OR 怪異 OR 妖怪";
+function iwakuScore(text) {
+    const t = String(text || "").replace(/伝説の(?!地)/g, "");   // 「伝説のラーメン店」のような褒め言葉は除く
+    let sc = 0;
+    for (const [w, pt] of IWAKU_WORDS) if (t.includes(w)) sc += pt;
+    return sc;
+}
+/** 本文から、いわくの言葉を含む文を濃い順に2〜3文抜き出す（400字まで） */
+function iwakuExcerpt(full) {
+    const sents = String(full || "").replace(/={2,}[^=]*={2,}/g, " ").replace(/\s+/g, " ").split(/(?<=。)/).map(x => x.trim()).filter(x => x.length > 8);
+    const ranked = sents.map((x, i) => ({ x, i, sc: iwakuScore(x) })).filter(o => o.sc >= 3)
+        .sort((a, b) => b.sc - a.sc).slice(0, 3).sort((a, b) => a.i - b.i);
+    let out = ranked.map(o => o.x).join("");
+    return out.length > 400 ? out.slice(0, 398) + "……" : out;
+}
+async function fetchIwakuAnchors(lat, lon) {
+    const anchors = [];
+    try {
+        const q = `nearcoord:3km,${lat.toFixed(5)},${lon.toFixed(5)} ${IWAKU_QUERY}`;
+        const res = await fetchJson(`https://ja.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=20&srprop=snippet&format=json&origin=*`, 8000);
+        const hits = (res.query?.search || [])
+            .map(h => ({ title: h.title, sc: iwakuScore(h.title + " " + String(h.snippet || "").replace(/<[^>]+>/g, "")) }))
+            .filter(h => h.sc >= 6)              // 「事故」1語だけの施設記事などを落とす
+            .sort((a, b) => b.sc - a.sc)
+            .slice(0, 5);
+        if (!hits.length) { Logger.info("いわく検索", "(該当なし)"); return anchors; }
+        // 座標（距離）と本文（いわくの一節）を取りにいく
+        const coord = await fetchJson(`https://ja.wikipedia.org/w/api.php?action=query&prop=coordinates&titles=${encodeURIComponent(hits.map(h => h.title).join("|"))}&format=json&origin=*`, 6000).catch(() => ({}));
+        const distBy = {};
+        Object.values(coord.query?.pages || {}).forEach(p => {
+            const c = p.coordinates && p.coordinates[0];
+            if (c) distBy[p.title] = Math.round(haversine(lat, lon, c.lat, c.lon));
+        });
+        const bodies = await Promise.all(hits.slice(0, 4).map(h =>
+            fetchJson(`https://ja.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=${encodeURIComponent(h.title)}&format=json&origin=*`, 6000)
+                .then(j => Object.values(j.query?.pages || {})[0]?.extract || "").catch(() => "")));
+        hits.slice(0, 4).forEach((h, i) => {
+            const text = iwakuExcerpt(bodies[i]);
+            const sc = iwakuScore(text);
+            if (!text || sc < 8) return;          // 本文の一節が十分に濃いものだけ
+            anchors.push({
+                kind: "iwaku",
+                title: h.title,
+                distM: distBy[h.title] ?? null,
+                kata: "いわく",
+                iwaku: sc,                          // いわくの濃さ（大きいほど濃い）
+                priority: -1,
+                text,
+                source: `Wikipedia: ${h.title}`,
+                url: `https://ja.wikipedia.org/wiki/${encodeURIComponent(h.title.replaceAll(" ", "_"))}`
+            });
+        });
+        anchors.sort((a, b) => b.iwaku - a.iwaku);
+        Logger.info(`いわく検索: ${anchors.length}件`, anchors.map(a => `${a.title}(濃さ${a.iwaku}/${a.distM != null ? a.distM + "m" : "?"})`).join(" / "));
+    } catch (e) {
+        Logger.warn("いわく検索に失敗(通常の錨で続行)", String(e.message || e.name));
+    }
+    return anchors;
+}
+
 async function fetchWikipediaAnchors(lat, lon) {
     const anchors = [];
     try {
@@ -458,6 +532,17 @@ ${craftLines}` : ""}`;
     return { block, skeleton: structure, crafts };
 }
 
+// 鉄則5: いわく（事件・事故・死・祟り）の扱い。テスト中は「ぼかさない」版（IWAKU_UNBLURRED）
+const RULE5_BLURRED = `5. 土地の事件・死・心霊にまつわる錨は、必ずぼかして語る。
+   - 「いつ・誰・どうやって」は書かない。「昔」「このあたりで」までの曖昧さに留める。
+   - 場所を建物単位で指さず、エリア・方角の解像度で語る(錨に添えられた範囲表現をそのまま使う)。
+   - 歴史化していない噂は「〜という話が残る」「〜と聞いた」の伝聞にし、事実と断定しない。`;
+const RULE5_UNBLURRED = `5. **いわく（祟り・処刑・事件・事故・死・心霊）の錨は、話の芯として具体的に使ってよい**。錨にある時代・場所・出来事・言い伝えは、そのまま語ってよい（ぼかさなくてよい）。
+   - 【いわく(濃)】の錨があれば、それを話の芯に据える。駅・学校・施設などの無難な錨は、背景の描写にだけ使う。
+   - 錨に無い被害者の名前・年齢・死に方の細部は作らない。**近代以降（明治以降）の事件・事故の被害者の実名は、錨に書かれていても出さない**（「幼い子」「若い女性」など属性だけ）。存命の個人を特定しない。実在の住宅・営業中の店舗に怪異を紐づけない。
+   - 歴史化していない話は「〜という話が残る」「〜と聞いた」の伝聞で語り、錨以上の断定をしない。
+   - **噂の層**: 錨のいわくを受けて、近所でささやかれる根拠のない噂を、語りの中の誰か（体験者・近所の人・古くからの住人）が口にしたこととして創作してよい（例:「あの坂は、夜に通ると一段多い気がすると言う人がいる」）。噂は事実と断定せず、言った人の言葉として置く。実在しない事件・実在の固有名を噂に仕立てない。`;
+
 function buildPrompt(geo, anchors, now, extra) {
     const ex = extra || {};
     const variety = pickVariety(ex.weights);   // { block, skeleton } を一度だけ確定し、骨格をピンへ記録する
@@ -467,7 +552,8 @@ function buildPrompt(geo, anchors, now, extra) {
             const where = a.kind === "local_spot"
                 ? (a.areaLabel || "この一帯")
                 : `${distanceLabel(a.distM)}${a.distM != null ? `／約${a.distM}m` : ""}`;
-            const kataTag = a.kata ? `${a.kata}｜` : "";   // 型→語りの出どころ選択の手がかり
+            const kataTag = a.kind === "iwaku" ? `いわく(${a.iwaku >= 10 ? "濃" : "中"})｜`
+                : (a.kata ? `${a.kata}｜` : "");   // 型→語りの出どころ選択の手がかり
             const hint = a.hint ? `\n(語りの方向: ${a.hint})` : "";
             const src = a.url ? `${a.source} / ${a.url}` : a.source;
             return `【錨${i + 1}｜${kataTag}${where}】${a.text}${hint}\n(出典: ${src})`;
@@ -517,10 +603,7 @@ ${anchorBlock}
    - **指摘でなく符合**: 読者の現在地を「あなたは今ここにいる」と直接指さない。語り手自身が体験・伝聞した土地のこととして書き、結果として読者が「これは…今いる場所のことでは?」と自分で気づく形にする。当てると手品、符合させると怪異。
    - **質で錨を選ぶ(数は問わない)**: 最も強い土地の事実を物語の芯に据える。一本の筋が通り最も怖くなるなら錨は1つでよい。複数使うのは互いに響き合って質が上がるときだけで、無理な全部盛り(散漫)を避ける。距離の数字は書かない。最も近い土地の素性を「今この場所」として語りの中心に置く(コンセプトの核＝『今の場所』はぶらさない)。
 4. 現存する個人・特定の住宅・営業中の店舗に怪異を紐づけない。読者を別の場所へ誘導・移動させない。
-5. 土地の事件・死・心霊にまつわる錨は、必ずぼかして語る。
-   - 「いつ・誰・どうやって」は書かない。「昔」「このあたりで」までの曖昧さに留める。
-   - 場所を建物単位で指さず、エリア・方角の解像度で語る(錨に添えられた範囲表現をそのまま使う)。
-   - 歴史化していない噂は「〜という話が残る」「〜と聞いた」の伝聞にし、事実と断定しない。
+${IWAKU_UNBLURRED ? RULE5_UNBLURRED : RULE5_BLURRED}
    - **見切れない曖昧さを残す**: 怪異も語り手も土地を完全には把握していない。「この辺りに、古い水場のようなものが…ありませんか」のように、わからなさ・言いよどみを残す(全部を見通したように書かない)。
 6. 構成: 静かな日常→微かな違和感→理不尽な接近→手遅れ、の順。
    - **怖さは"わずかなズレ"から作る**: 数がひとつ多い、影がひとつ足りない、音が半拍ずれる、いつもと同じはずの道がどこか違う——説明・正体・理由は書かない。読者の身体感覚に近い小さな異常ほど効く。
@@ -838,7 +921,7 @@ ${ex && ex.weather ? `8. いまの空模様は「${ex.weather}」。初稿で天
 
 【絶対に守ること（初稿の規則をそのまま引き継ぐ）】
 - 冒頭1〜3行の「語り手の枠」（聞き集めた話をいまここにいる読者へ差し出す形）と、末尾の手渡しを必ず残す。
-- 土地の事実は下の錨にあるものだけ。**錨に無い事実風の嘘を足さない**。地名・事件・年代を新しく作らない。事件・死はぼかしたまま。
+- 土地の事実は下の錨にあるものだけ。**錨に無い事実風の嘘を足さない**。地名・事件・年代を新しく作らない。${IWAKU_UNBLURRED ? "錨にあるいわく（事件・事故・死・祟り）は具体のまま残してよい。錨に無い被害者の名前や細部は足さない。話の中の誰かが口にする根拠のない噂は残してよい" : "事件・死はぼかしたまま"}。
 - 1文1行、全体30〜45行。文末の「〜そうです／〜だそうです／〜とのことです」は禁止。{{TIME}} は冒頭で1回だけ（初稿にあれば残す）。
 - 演出タグ（[SOUND:..]/[VISUAL:..]）は初稿のものを、対応する出来事の行の直後に残す。新しく増やさない（無音以外で合計3個まで）。
 - **音のタグは、直前の行にその音が書かれているときだけ残す**。書き直しで音の描写が消えたらタグも消す。音の場面は擬音（「コン、コン。」「カツッ……カツッ……」）で書くと効く。「しん、と静まり返る」場面には [SOUND:SILENCE] を置いてよい。
@@ -1093,10 +1176,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
 
             // 2. 錨収集(並列)
             setStatus("……この土地の記憶を、掘り起こしています……", "tuning");
-            const [geo, localSpots, wiki, weather, pinsForWeights] = await Promise.all([
+            const [geo, localSpots, wiki, iwaku, weather, pinsForWeights] = await Promise.all([
                 reverseGeocode(lat, lon),
                 fetchLocalSpotAnchors(lat, lon),
                 fetchWikipediaAnchors(lat, lon),
+                fetchIwakuAnchors(lat, lon),                                       // いわく(2026-10-10)
                 fetchWeather(lat, lon),                                            // いまの空模様(2026-10)
                 ImakokoDB.getAllPins().catch(() => [])                             // 星評価→骨格の重み(2026-10)
             ]);
@@ -1112,7 +1196,11 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 .sort((a, b) => (a.priority - b.priority) || ((a.distM ?? 9e9) - (b.distM ?? 9e9)));
             const rest = [...lore, ...wiki]
                 .sort((a, b) => (a.distM ?? 9e9) - (b.distM ?? 9e9));
-            const anchors = [...localFirst, ...rest].slice(0, 5);
+            // 2026-10-10: いわく（濃い順・最大3）を先頭に。近いだけの無難な記事は後ろへ（背景用）
+            const seen = new Set();
+            const anchors = [...iwaku.slice(0, 3), ...localFirst, ...rest]
+                .filter(a => { const k = a.title; if (seen.has(k)) return false; seen.add(k); return true; })
+                .slice(0, 5);
             Logger.info(`錨収集完了: ${anchors.length}本(近い順)`,
                 anchors.map(a => `${a.title}(${a.distM != null ? a.distM + "m" : "?"})`).join(" / ") || "(なし→場所タイプで生成)");
 
