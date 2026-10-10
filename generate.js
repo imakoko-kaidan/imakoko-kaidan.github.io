@@ -668,7 +668,7 @@ ${variety.block}
 - **強い演出([VISUAL:BLACKOUT]/[VISUAL:BLINK]/[VISUAL:FLASH]/[VISUAL:SHAKE])は、手遅れの決定的な一瞬に1回だけ**。乱発しない。([VISUAL:BLINK]=画面が完全に真っ暗に明滅する)
 [/STORY]
 [META]
-{"title": "ピン一覧用の短い題(12字以内・ネタバレ禁止)", "tags": ["状況タグを3〜4個"], "usedAnchors": [使った錨の番号の配列。例: [1,3]], "shareText": "ネタバレなしで土地の事実を一片だけ含む共有文(60字以内)", "ambience": "話の舞台に最も合う環境音を次から1つ: rain(雨の夜) / residential(静かな住宅街・夜道) / water(川・池・海などの水辺) / forest(山・林・神社・墓地) / tunnel(地下道・トンネル・駅の構内・地下駐車場) / room(部屋の中・屋内の深夜) / apartment(団地・アパート・マンションの廊下や階段) / hospital(病院・学校・廃墟など古い建物の中) / railway(線路沿い・踏切・駅のホーム) / alley(繁華街の裏路地・飲み屋街・駅前の夜)", "fear": "書き上げた話の怖さの強さ(読む画面の灯りの乱れ・一瞬の恐怖演出の量になる)を次から1つ: mild(静かにじわじわ迫る・余韻型。はっきりした遭遇はない) / standard(はっきり怖い出来事が起きる) / intense(直接の遭遇・逃げ場のない恐怖が続く)"}
+{"title": "ピン一覧用の短い題(12字以内・ネタバレ禁止)", "tags": ["状況タグを3〜4個"], "usedAnchors": [使った錨の番号の配列。例: [1,3]], "shareText": "ネタバレなしで土地の事実を一片だけ含む共有文(60字以内)", "ambience": "話の舞台に最も合う環境音を次から1つ: rain(雨の夜) / residential(静かな住宅街・夜道) / water(川・池・海などの水辺) / forest(山・林・神社・墓地) / tunnel(地下道・トンネル・駅の構内・地下駐車場) / room(部屋の中・屋内の深夜) / apartment(団地・アパート・マンションの廊下や階段) / hospital(病院・学校・廃墟など古い建物の中) / railway(線路沿い・踏切・駅のホーム) / alley(繁華街の裏路地・飲み屋街・駅前の夜)", "fear": "書き上げた話の怖さの強さ(読む画面の灯りの乱れ・一瞬の恐怖演出の量になる)を次から1つ: mild(静かにじわじわ迫る・余韻型。はっきりした遭遇はない) / standard(はっきり怖い出来事が起きる) / intense(直接の遭遇・逃げ場のない恐怖が続く)", "readings": [{"w": "本文中の読み間違えやすい語(地名・寺社名・人名・難読語・重箱読みなど。2字以上の漢字語)", "r": "その語の正しい読み(ひらがな)"}, "…本文に実際に出てくる語だけ。最大20個。読み間違えようのない語は入れない"]}
 [/META]`;
     return { prompt, skeleton: variety.skeleton, crafts: variety.crafts || [] };
 }
@@ -971,6 +971,32 @@ function placeLabelOf(geo) {
     return parts.join("") || geo.prefecture || "";
 }
 
+// ---------- 2026-10-10: 語り手の声の読み間違い対策 ----------
+// 声(TTS)には、読み間違えやすい語をひらがなに置き換えた文を渡す（画面の文字はそのまま）。
+// 読みの出どころ: ①土地の事実(Wikipedia)の「語（よみ）」 ②AIが本文に添えた読み。①を優先。
+function cleanReadings(list) {
+    const out = [];
+    (Array.isArray(list) ? list : []).forEach(o => {
+        if (!o || typeof o !== "object") return;
+        const w = String(o.w || "").trim(), r = String(o.r || "").trim().replace(/\s+/g, "");
+        if (w.length < 2 || w.length > 20 || !/[一-龥々〆ヶヵ]/.test(w)) return;     // 漢字を含む2字以上だけ
+        if (!r || r.length > 40 || !/^[ぁ-ゖァ-ヺー・]+$/.test(r)) return;          // 読みはかなだけ
+        if (r.length < w.length || r.length > w.length * 5) return;                // 読みの長さが不自然なものは捨てる
+        if (!out.some(x => x.w === w)) out.push({ w, r });
+    });
+    return out.slice(0, 40);
+}
+/** 土地の事実の本文から「漢字語（よみ）」を拾う（Wikipediaの書き方） */
+function readingsFromAnchors(anchors) {
+    const out = [];
+    const re = /([一-龥々〆ヶヵ]{2,12})[（(]([ぁ-ゖー・ ]{2,30})[、,）)]/g;   // かっこ直前の漢字の連なりだけ
+    (anchors || []).forEach(a => {
+        const t = String(a.text || "") + " " + String(a.title || "");
+        let m; while ((m = re.exec(t))) out.push({ w: m[1], r: m[2] });
+    });
+    return cleanReadings(out);
+}
+
 function parseGenerated(text, anchors) {
     const storyMatch = text.match(/\[STORY\]([\s\S]*?)\[\/STORY\]/);
     const metaMatch = text.match(/\[META\]([\s\S]*?)\[\/META\]/);
@@ -1002,6 +1028,7 @@ function parseGenerated(text, anchors) {
         credits,
         ambience: AMBIENCES.includes(meta.ambience) ? meta.ambience : "",
         fear: ["mild", "standard", "intense"].includes(meta.fear) ? meta.fear : "",   // 演出の強さ(2026-10・AI判定)
+        readings: cleanReadings(meta.readings),   // 読み上げ用の読み(2026-10-10)
         creditsNote: credits.length
             ? "この怪談はフィクションです。ただし、上の土地の事実は本物です。"
             : "この怪談はフィクションです。"
@@ -1228,6 +1255,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                         if (!story2.ambience) story2.ambience = story.ambience;
                         if (!story2.title) story2.title = story.title;
                         if (!story2.fear) story2.fear = story.fear;
+                        story2.readings = cleanReadings([...(story2.readings || []), ...(story.readings || [])]);
                         story = story2;
                         refined = true;
                         Logger.info("推敲", `採用(初稿${textCount(draftLines)}行→改稿${textCount(story2.lines)}行)`);
@@ -1271,6 +1299,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 model: chosenModel || "auto",
                 skeleton: built.skeleton,   // 使った話の骨格(評価集計で弱い骨格を炙り出す)
                 crafts: built.crafts,       // 渡した怪談師の技(2026-10。★評価と突き合わせて効き目を見る)
+                readings: cleanReadings([...readingsFromAnchors(anchors), ...(story.readings || [])]),   // 声の読み(2026-10-10)
                 rating: 0,                  // 読者の星評価(0=未評価, 1〜5)
                 // 評価集計用(改善のため): 主な錨=スポット名/出典 と エリア名。生GPSは集計に送らない(プライバシー)。
                 spotName: (anchors[0] && (anchors[0].title || anchors[0].source)) || "",

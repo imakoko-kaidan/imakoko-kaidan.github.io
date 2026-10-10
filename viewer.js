@@ -430,7 +430,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             const lineEls = [...container.querySelectorAll(".story-line")].filter(el => el !== endSpace);
             narrating = ImakokoNarrator.attach({
                 container, lineEls, rawLines: story.lines,
-                storyId: pinId || story.id, endSpace
+                storyId: pinId || story.id, endSpace,
+                readings: story.readings || []     // 声の読み(2026-10-10)
             });
         }
         // 一瞬の恐怖演出（回数・位置は毎回くじ引き。0回の話もある）

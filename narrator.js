@@ -69,6 +69,25 @@ window.ImakokoNarrator = (() => {
         el.style.opacity = "1";
     }
 
+    // ---------- 読み間違い対策（2026-10-10）: 声に渡す文だけ、難読語をひらがなに置き換える ----------
+    // 話ごとの読み(pin.readings)＋どの話にも効く読み。長い語から先に置き換える（短い語が長い語の一部を壊さないように）
+    const COMMON_READINGS = [
+        { w: "逢魔が時", r: "おうまがとき" }, { w: "丑三つ時", r: "うしみつどき" }, { w: "百物語", r: "ひゃくものがたり" },
+        { w: "生業", r: "なりわい" }, { w: "黄昏", r: "たそがれ" }, { w: "刑場", r: "けいじょう" }, { w: "首塚", r: "くびづか" },
+        { w: "供養塔", r: "くようとう" }, { w: "人柱", r: "ひとばしら" }, { w: "祟り", r: "たたり" }, { w: "暗渠", r: "あんきょ" }
+    ];
+    let readings = [];
+    function setReadings(list) {
+        const all = [...(Array.isArray(list) ? list : []), ...COMMON_READINGS];
+        const seen = new Set();
+        readings = all.filter(o => o && o.w && o.r && !seen.has(o.w) && seen.add(o.w)).sort((a, b) => b.w.length - a.w.length);
+    }
+    function speechText(text) {
+        let t = String(text || "");
+        for (const { w, r } of readings) if (t.includes(w)) t = t.split(w).join(r);
+        return t;
+    }
+
     // ---------- 音声を作る（1行） ----------
     async function synth(text, attempt = 0, style) {
         const content = { type: "text", text };
@@ -109,7 +128,7 @@ window.ImakokoNarrator = (() => {
             try { blob = await ImakokoDB.getAudio(key); } catch (e) { blob = null; }
             if (!blob) {
                 if (st.stopped) throw new Error("stopped");
-                blob = await synth(st.lines[i].text, 0, isLast ? LAST_LINE_STYLE : null);
+                blob = await synth(speechText(st.lines[i].text), 0, isLast ? LAST_LINE_STYLE : null);
                 generated = true;
                 ImakokoDB.putAudio(key, blob).catch(() => { /* 保存失敗でも再生は続ける */ });
             }
@@ -365,6 +384,7 @@ window.ImakokoNarrator = (() => {
      * @param {object} o { container, lineEls, rawLines, storyId, endSpace }
      */
     function attach(o) {
+        setReadings(o.readings);
         const lines = buildLines(o);
         if (!lines.length) return false;
         base = {
