@@ -330,6 +330,19 @@ body {
     50% { opacity: 0.35; }
 }
 .status.error { color: #a05555; }
+
+/* 待ち時間の「この場所の記録」（2026-10・wait_feed.js） */
+.wait-feed { width: min(420px, 88vw); margin-top: -0.6rem; text-align: left; }
+.wait-feed[hidden] { display: none; }
+.wait-feed .wf-head { margin: 0 0 0.7rem; font-size: 0.78rem; letter-spacing: 0.08em; color: #8a93ad; line-height: 1.7; text-align: center; }
+.wait-feed .wf-card { min-height: 8.5rem; padding: 1rem 1.1rem; border: 1px solid rgba(150, 160, 190, 0.18); border-radius: 8px;
+    background: rgba(3, 4, 8, 0.55); opacity: 0; transform: translateY(4px); transition: opacity .45s ease, transform .45s ease; }
+.wait-feed .wf-card.in { opacity: 1; transform: none; }
+.wait-feed .wf-label { margin: 0 0 0.5rem; font-size: 0.7rem; letter-spacing: 0.15em; color: #a0485a; display: flex; justify-content: space-between; gap: 1em; }
+.wait-feed .wf-dist { color: #6a7080; letter-spacing: 0.05em; }
+.wait-feed .wf-title { margin: 0 0 0.35rem; font-size: 0.92rem; color: #dfe2ea; letter-spacing: 0.06em; }
+.wait-feed .wf-text { margin: 0; font-size: 0.8rem; line-height: 1.85; color: #a7adba; }
+.wait-feed .wf-src { margin: 0.5rem 0 0; font-size: 0.66rem; color: #5f6575; }
 .status.done { color: #b8c4e0; }
 
 .home-nav { width: min(420px, 88vw); }
@@ -444,6 +457,13 @@ body {
     accent-color: #8a4a5a;
     transform: scale(1.2);
 }
+/* チェックで何が変わるかの説明（2026-10） */
+.settings label.toggle-row:has(.toggle-text) { align-items: flex-start; }
+.settings label.toggle-row:has(.toggle-text) input { margin-top: 0.3em; flex: none; }
+.settings .toggle-text { display: block; text-align: left; line-height: 1.5; }
+.settings .toggle-text b { font-weight: normal; color: #d6d9e0; }
+.settings .toggle-text small { display: block; margin-top: 0.25em; font-size: 0.72rem; color: #8a909c; line-height: 1.65; }
+.settings .cost-table th:last-child, .settings .cost-table td:last-child { white-space: nowrap; }
 .settings .note {
     font-size: 0.68rem;
     color: #555;

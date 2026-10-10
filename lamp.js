@@ -16,14 +16,15 @@
 
     const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // 怖さ設定ごとの「平均の待ち時間（秒）」と出来事の比率。平均のまわりで毎回ランダムに揺れる
-    const LEVEL = (() => { try { return (window.ImakokoSettings && ImakokoSettings.scareLevel()) || "standard"; } catch (e) { return "standard"; } })();
-    const TUNE = {
+    // 演出の強さ（お話ごと。settings.js）ごとの「平均の待ち時間（秒）」と出来事の比率。平均のまわりで毎回ランダムに揺れる
+    // 読む画面が話を読み込んでから決まるので、毎回その場で引く
+    const TUNES = {
         mild:     { gap: 16, dip: 1.0,  stutter: 0,    soft: true },    // 一瞬暗くなるだけ（明滅しない）
         standard: { gap: 11, dip: 0.55, stutter: 0.88, soft: false },
         intense:  { gap: 7,  dip: 0.35, stutter: 0.8,  soft: false }
-    }[LEVEL] || { gap: 11, dip: 0.55, stutter: 0.88, soft: false };
-    const MEAN_GAP = TUNE.gap;
+    };
+    function levelNow() { try { return (window.ImakokoSettings && ImakokoSettings.scareLevel()) || "standard"; } catch (e) { return "standard"; } }
+    function tune() { return TUNES[levelNow()] || TUNES.standard; }
     const MIN_GAP = 2.5;
 
     let dim = null;           // 暗幕
@@ -115,10 +116,10 @@
     }
 
     function pick() {
-        if (reduceMotion || TUNE.soft) return dip();
+        if (reduceMotion || tune().soft) return dip();
         const r = Math.random();
-        if (r < TUNE.dip) return dip();
-        if (r < TUNE.stutter) return stutter();
+        if (r < tune().dip) return dip();
+        if (r < tune().stutter) return stutter();
         return dropout();
     }
 
@@ -126,7 +127,7 @@
         clearTimeout(timer);
         if (!running) return;
         // 指数分布で次の出来事までの時間を決める（たまに長い沈黙、たまに立て続け）
-        const gap = Math.max(MIN_GAP, -Math.log(1 - Math.random()) * MEAN_GAP);
+        const gap = Math.max(MIN_GAP, -Math.log(1 - Math.random()) * tune().gap);
         timer = setTimeout(async () => {
             if (running && !paused && !busy && !document.hidden) await sequence(pick());
             schedule();
@@ -151,7 +152,7 @@
     /** 外部から名前で出来事を起こす（"dip" | "stutter" | "dropout"） */
     function event(name, hooks) {
         let f = { dip, stutter, dropout }[name] || stutter;
-        if (reduceMotion || TUNE.soft) f = name === "dropout" ? softDrop : dip;   // 控えめ: 明滅させない
+        if (reduceMotion || tune().soft) f = name === "dropout" ? softDrop : dip;   // 控えめ: 明滅させない
         if (busy) return Promise.resolve(false);
         return sequence(f(), hooks).then(() => true);
     }
@@ -177,7 +178,9 @@
     else initBgVideo();
 
     window.ImakokoLamp = {
-        start, stop, sequence, event, scareLevel: LEVEL, soft: TUNE.soft || reduceMotion,
+        start, stop, sequence, event,
+        get scareLevel() { return levelNow(); },
+        get soft() { return tune().soft || reduceMotion; },
         pause() { paused = true; },
         resume() { paused = false; },
         get level() { return current; },

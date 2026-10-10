@@ -4,9 +4,10 @@
  * voiceEnabled: 語り手の声で読み上げるか。初期値 OFF。
  *   OFF のあいだは、読み上げ音声(TTS)の生成リクエストを一切送らない＝料金も発生しない。
  *   読み上げ機能を実装するときは、生成の直前に必ず ImakokoSettings.voiceEnabled() を確認すること。
- * scareLevel: 怖さ。"mild"(控えめ) / "standard"(標準・初期値) / "intense"(本気)。
- *   控えめ＝激しい点滅・暗転の明滅・画面の揺れを出さず、一瞬の恐怖演出も少なめ（光に敏感な人向けでもある）。
- *   端末の「視差効果を減らす(prefers-reduced-motion)」がONなら、未設定時は控えめにする。
+ * scareLevel: 演出の強さ。"mild"(控えめ) / "standard"(標準) / "intense"(強め)。
+ *   2026-10: 利用者の設定はやめ、お話ごとに決める（生成時にAIが判定して pin.fear に保存。
+ *   無い古い話は estimateFear で本文から推定）。読む画面が setStoryLevel() で入れる。
+ *   端末の「視差効果を減らす(prefers-reduced-motion)」がONなら常に控えめ（点滅・揺れを出さない）。
  */
 window.ImakokoSettings = (() => {
     const VOICE_KEY = "imakoko_voice_enabled";
@@ -16,20 +17,23 @@ window.ImakokoSettings = (() => {
     function setVoiceEnabled(on) {
         try { localStorage.setItem(VOICE_KEY, on ? "1" : "0"); } catch (e) { /* 保存できなくてもOFF扱い */ }
     }
-    const SCARE_KEY = "imakoko_scare_level";
     const LEVELS = ["mild", "standard", "intense"];
-    function scareLevel() {
-        try {
-            const v = localStorage.getItem(SCARE_KEY);
-            if (LEVELS.includes(v)) return v;
-        } catch (e) { /* noop */ }
-        const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        return reduce ? "mild" : "standard";
+    let storyLevel = "standard";
+    const reduceMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    function scareLevel() { return reduceMotion() ? "mild" : storyLevel; }
+    function setStoryLevel(v) { if (LEVELS.includes(v)) storyLevel = v; }
+    /** 本文から演出の強さを推定（AIの判定が無い古い話・判定が壊れていた時の補い） */
+    function estimateFear(lines) {
+        const ls = (lines || []).map(String);
+        let score = 0;
+        for (const l of ls) {
+            if (/^\[SOUND:(?!SILENCE)/.test(l)) score += 1;
+            if (/^\[VISUAL:(BLACKOUT|BLINK|FLASH|SHAKE|GHOST)\]/.test(l)) score += 2;
+            if (!l.startsWith("[")) score += Math.min(2, (l.match(/血|死体|首|悲鳴|叫|目が合|顔が|すぐ後ろ|耳元|掴ま|つかま|引きずり|追いかけ|逃げ/g) || []).length);
+        }
+        return score <= 3 ? "mild" : score <= 8 ? "standard" : "intense";
     }
-    function setScareLevel(v) {
-        try { if (LEVELS.includes(v)) localStorage.setItem(SCARE_KEY, v); } catch (e) { /* noop */ }
-    }
-    const SCARE_LABEL = { mild: "控えめ", standard: "標準", intense: "本気" };
+    const SCARE_LABEL = { mild: "静か", standard: "標準", intense: "強め" };
     // 推敲(2026-10): 初稿を編集者AIが怖さの観点で書き直す。初期値 ON（+約1.3円・+約20秒）
     const REFINE_KEY = "imakoko_refine";
     function refineEnabled() {
@@ -38,5 +42,5 @@ window.ImakokoSettings = (() => {
     function setRefineEnabled(on) {
         try { localStorage.setItem(REFINE_KEY, on ? "1" : "0"); } catch (e) { /* noop */ }
     }
-    return { voiceEnabled, setVoiceEnabled, scareLevel, setScareLevel, SCARE_LABEL, refineEnabled, setRefineEnabled };
+    return { voiceEnabled, setVoiceEnabled, scareLevel, setStoryLevel, estimateFear, LEVELS, SCARE_LABEL, refineEnabled, setRefineEnabled };
 })();

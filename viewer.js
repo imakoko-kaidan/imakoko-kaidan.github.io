@@ -11,13 +11,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("story-container");
     const startScreen = document.getElementById("start-screen");
 
-    // スタート画面に、いまの「怖さ」を表示
-    try {
-        const lv = ImakokoSettings.scareLevel();
-        const el = document.getElementById("ss-level");
-        if (el) el.textContent = "いまの怖さ：" + (ImakokoSettings.SCARE_LABEL[lv] || "標準");
-    } catch (e) { /* noop */ }
-
     // ---- 1. 作品データの解決 -------------------------------------------------
     // 優先順位: ?pin=(IndexedDB・自分のコレクション) → ?preview=1 → ?id=(同梱デモ) → デモ先頭
     const params = new URLSearchParams(location.search);
@@ -48,6 +41,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         startScreen.innerHTML = "<p>作品が見つかりませんでした。<br><a href='./index.html' style='color:#666;'>戻る</a></p>";
         return;
     }
+
+    // ---- 1.2 演出の強さ（2026-10: 設定ではなくお話ごと）。生成時のAI判定 → 無ければ本文から推定 ----
+    try {
+        const lv = ImakokoSettings.LEVELS.includes(story.fear) ? story.fear : ImakokoSettings.estimateFear(story.lines);
+        ImakokoSettings.setStoryLevel(lv);
+        const el = document.getElementById("ss-level");
+        if (el) el.textContent = "この話の演出：" + (ImakokoSettings.SCARE_LABEL[ImakokoSettings.scareLevel()] || "標準");
+    } catch (e) { /* noop */ }
 
     // ---- 1.5 背景画像レイヤー（ハイブリッド演出: 指定時のみ） -------------------
     if (story.bgImage) {
@@ -468,16 +469,54 @@ document.addEventListener("DOMContentLoaded", async () => {
     startScreen.addEventListener("click", initAndStart);
     startScreen.addEventListener("touchstart", initAndStart, { passive: true });
 
-    // 離脱ボタン: 押したら音を完全に止めてから戻る
+    // 離脱ボタン（2026-10）: いきなり戻さず、記録は消えないことを伝えてから確認する
     const exitBtn = document.getElementById("exit-btn");
+    function leaveNow() {
+        if (window.ImakokoNarrator) ImakokoNarrator.stop();
+        if (window.ImakokoCandle) ImakokoCandle.stop();
+        if (typeof HorrorAudio !== "undefined") HorrorAudio.stopAll();
+        stopEnvironmentEffects();
+        location.href = "./index.html";
+    }
+    function askLeave() {
+        if (document.getElementById("leave-dialog")) return;
+        // 確認のあいだは、声・音・灯りの乱れを止めておく
+        if (window.ImakokoNarrator) ImakokoNarrator.pause();
+        if (typeof HorrorAudio !== "undefined") HorrorAudio.stopAll();
+        if (window.ImakokoLamp) ImakokoLamp.pause();
+        const saved = !!pinId;
+        const wrap = document.createElement("div");
+        wrap.id = "leave-dialog";
+        wrap.setAttribute("role", "dialog");
+        wrap.setAttribute("aria-modal", "true");
+        wrap.setAttribute("aria-labelledby", "ld-title");
+        wrap.innerHTML = `<div class="ld-inner">
+            <p id="ld-title" class="ld-title">ここで、読むのをやめますか？</p>
+            <p class="ld-body">${saved
+                ? "この話は消えません。<br>「集めた怪談の地図」に記録されているので、<br>いつでも最初から読み返せます。"
+                : "この話は、あとからいつでも読み返せます。"}</p>
+            <div class="ld-btns">
+                <button type="button" class="ld-btn ld-stay">続きを読む</button>
+                <button type="button" class="ld-btn ld-leave">やめてタイトルへ</button>
+            </div></div>`;
+        document.body.appendChild(wrap);
+        const close = () => {
+            wrap.remove();
+            document.removeEventListener("keydown", onKey);
+            if (typeof HorrorAudio !== "undefined") HorrorAudio.resumeAll();
+            if (window.ImakokoLamp) ImakokoLamp.resume();
+            if (window.ImakokoNarrator) ImakokoNarrator.resume();
+            exitBtn && exitBtn.focus();
+        };
+        const onKey = (e) => { if (e.key === "Escape") close(); };
+        document.addEventListener("keydown", onKey);
+        wrap.querySelector(".ld-stay").onclick = close;
+        wrap.querySelector(".ld-leave").onclick = leaveNow;
+        wrap.addEventListener("click", (e) => { if (e.target === wrap) close(); });
+        wrap.querySelector(".ld-stay").focus();
+    }
     if (exitBtn) {
-        exitBtn.addEventListener("click", () => {
-            if (window.ImakokoNarrator) ImakokoNarrator.stop();
-            if (window.ImakokoCandle) ImakokoCandle.stop();
-            if (typeof HorrorAudio !== "undefined") HorrorAudio.stopAll();
-            stopEnvironmentEffects();
-            // hrefの遷移に任せる（href="./index.html"）
-        });
+        exitBtn.addEventListener("click", (e) => { e.preventDefault(); askLeave(); });
     }
 
     // ---- 4.5 音の後始末: ページを離れる/タブを隠すと鳴り続けないように ----------

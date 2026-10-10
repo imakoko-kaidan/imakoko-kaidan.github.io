@@ -126,7 +126,7 @@ async function fetchJson(url, timeoutMs = 8000) {
 
 /** 逆ジオコーディング: 町名・住所(GSI + Nominatim 併用) */
 async function reverseGeocode(lat, lon) {
-    const result = { town: null, address: null, placeType: null, prefecture: "" };
+    const result = { town: null, address: null, placeType: null, prefecture: "", city: "", ward: "" };
     try {
         const gsi = await fetchJson(`https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat=${lat}&lon=${lon}`);
         result.town = gsi.results?.lv01Nm || null;
@@ -140,8 +140,11 @@ async function reverseGeocode(lat, lon) {
         result.address = nomi.display_name || null;
         if (!result.prefecture && typeof ImakokoPrefs !== "undefined") result.prefecture = ImakokoPrefs.fromText(result.address);
         result.placeType = nomi.category && nomi.type ? `${nomi.category}/${nomi.type}` : null;
+        const na = nomi.address || {};
+        result.city = na.city || na.town || na.village || "";          // 市区町村(待ち時間の「〇〇市〇〇付近」用)
+        result.ward = /区$/.test(na.city_district || "") ? na.city_district : (/区$/.test(na.suburb || "") ? na.suburb : "");
         if (!result.town) {
-            const a = nomi.address || {};
+            const a = na;
             result.town = a.neighbourhood || a.suburb || a.quarter || a.city_district || a.town || a.village || null;
         }
         Logger.info("逆ジオ(Nominatim)", { address: result.address, type: result.placeType });
@@ -563,7 +566,7 @@ ${variety.block}
 - **強い演出([VISUAL:BLACKOUT]/[VISUAL:BLINK]/[VISUAL:FLASH]/[VISUAL:SHAKE])は、手遅れの決定的な一瞬に1回だけ**。乱発しない。([VISUAL:BLINK]=画面が完全に真っ暗に明滅する)
 [/STORY]
 [META]
-{"title": "ピン一覧用の短い題(12字以内・ネタバレ禁止)", "tags": ["状況タグを3〜4個"], "usedAnchors": [使った錨の番号の配列。例: [1,3]], "shareText": "ネタバレなしで土地の事実を一片だけ含む共有文(60字以内)", "ambience": "話の舞台に最も合う環境音を次から1つ: rain(雨の夜) / residential(静かな住宅街・夜道) / water(川・池・海などの水辺) / forest(山・林・神社・墓地) / tunnel(地下道・トンネル・駅の構内・地下駐車場) / room(部屋の中・屋内の深夜) / apartment(団地・アパート・マンションの廊下や階段) / hospital(病院・学校・廃墟など古い建物の中) / railway(線路沿い・踏切・駅のホーム) / alley(繁華街の裏路地・飲み屋街・駅前の夜)"}
+{"title": "ピン一覧用の短い題(12字以内・ネタバレ禁止)", "tags": ["状況タグを3〜4個"], "usedAnchors": [使った錨の番号の配列。例: [1,3]], "shareText": "ネタバレなしで土地の事実を一片だけ含む共有文(60字以内)", "ambience": "話の舞台に最も合う環境音を次から1つ: rain(雨の夜) / residential(静かな住宅街・夜道) / water(川・池・海などの水辺) / forest(山・林・神社・墓地) / tunnel(地下道・トンネル・駅の構内・地下駐車場) / room(部屋の中・屋内の深夜) / apartment(団地・アパート・マンションの廊下や階段) / hospital(病院・学校・廃墟など古い建物の中) / railway(線路沿い・踏切・駅のホーム) / alley(繁華街の裏路地・飲み屋街・駅前の夜)", "fear": "書き上げた話の怖さの強さ(読む画面の灯りの乱れ・一瞬の恐怖演出の量になる)を次から1つ: mild(静かにじわじわ迫る・余韻型。はっきりした遭遇はない) / standard(はっきり怖い出来事が起きる) / intense(直接の遭遇・逃げ場のない恐怖が続く)"}
 [/META]`;
     return { prompt, skeleton: variety.skeleton };
 }
@@ -830,6 +833,42 @@ ${facts}
 ${draftRaw}`;
 }
 
+// ---------- 2026-10: 設定の料金表（選んだ生成モデルに合わせて書き換える） ----------
+// 1話あたりの実測ベースの概算（2026-10測定・150円/ドル）。声は別モデル(TTS)なので生成モデルに関係なく同じ。
+const MODEL_COST = {
+    "gemini-3.8-flash":       { name: "おすすめ",   make: "約1.3円", wait: "約20秒", free: true },
+    "gemini-3.5-flash-lite":  { name: "安い・速い", make: "約0.4円", wait: "約5秒",  free: true },
+    "gemini-3.1-pro-preview": { name: "最高品質",   make: "約6円",   wait: "約40秒〜", free: false }   // VERIFY: 待ち時間は実測少なめ
+};
+function renderCostTable() {
+    const sel = document.getElementById("model-select");
+    const box = document.getElementById("cost-box");
+    if (!sel || !box) return;
+    const c = MODEL_COST[sel.value] || MODEL_COST["gemini-3.8-flash"];
+    const free = (v) => c.free ? v : "使えません";
+    box.innerHTML = `
+        <table class="cost-table">
+            <caption>1話あたりの料金と待ち時間の目安（${c.name}のモデル）</caption>
+            <thead><tr><th></th><th>無料枠のキー</th><th>支払い登録したキー</th><th>待ち時間</th></tr></thead>
+            <tbody>
+                <tr><th>怪談をつくる</th><td>${free("0円")}</td><td>${c.make}</td><td>${c.wait}</td></tr>
+                <tr><th>＋推敲</th><td>${free("0円")}</td><td>＋${c.make}</td><td>＋${c.wait}</td></tr>
+                <tr><th>＋語り手の声</th><td>0円<sup>※</sup></td><td>＋約7円</td><td>読みながら</td></tr>
+            </tbody>
+        </table>
+        ${c.free ? "" : '<p class="note">このモデルは支払い登録したキーでのみ使えます。無料枠のキーでは、自動で「おすすめ」のモデルに切り替えて作ります（0円）。</p>'}`;
+}
+
+/** 待ち時間に見せる「〇〇市〇〇」（市区町村＋町名。重なりは省く。取れなければ都道府県） */
+function placeLabelOf(geo) {
+    const parts = [];
+    for (const p of [geo.city, geo.ward, geo.town]) {
+        const v = String(p || "").trim();
+        if (v && !parts.some(x => x.includes(v) || v.includes(x))) parts.push(v);
+    }
+    return parts.join("") || geo.prefecture || "";
+}
+
 function parseGenerated(text, anchors) {
     const storyMatch = text.match(/\[STORY\]([\s\S]*?)\[\/STORY\]/);
     const metaMatch = text.match(/\[META\]([\s\S]*?)\[\/META\]/);
@@ -860,6 +899,7 @@ function parseGenerated(text, anchors) {
         lines,
         credits,
         ambience: AMBIENCES.includes(meta.ambience) ? meta.ambience : "",
+        fear: ["mild", "standard", "intense"].includes(meta.fear) ? meta.fear : "",   // 演出の強さ(2026-10・AI判定)
         creditsNote: credits.length
             ? "この怪談はフィクションです。ただし、上の土地の事実は本物です。"
             : "この怪談はフィクションです。"
@@ -946,8 +986,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         modelSelect.value = savedModel;
     }
     if (modelSelect) {
-        modelSelect.addEventListener("change", () => localStorage.setItem("imakoko_model", modelSelect.value));
+        modelSelect.addEventListener("change", () => { localStorage.setItem("imakoko_model", modelSelect.value); renderCostTable(); });
     }
+    renderCostTable();
 
     // 語り手の声(読み上げ)のON/OFF。初期OFF。OFFの間は音声生成を一切行わない(settings.js)
     const voiceToggle = document.getElementById("voice-enabled");
@@ -966,16 +1007,6 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
         refineToggle.addEventListener("change", () => {
             ImakokoSettings.setRefineEnabled(refineToggle.checked);
             Logger.info("推敲", refineToggle.checked ? "ON" : "OFF");
-        });
-    }
-
-    // 怖さ(控えめ/標準/本気)。読む画面の灯りの乱れ・一瞬の恐怖演出・強い視覚演出の量が変わる(settings.js)
-    const scareSel = document.getElementById("scare-level");
-    if (scareSel && window.ImakokoSettings) {
-        scareSel.value = ImakokoSettings.scareLevel();
-        scareSel.addEventListener("change", () => {
-            ImakokoSettings.setScareLevel(scareSel.value);
-            Logger.info("怖さ", scareSel.value);
         });
     }
 
@@ -1066,6 +1097,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
             Logger.info(`錨収集完了: ${anchors.length}本(近い順)`,
                 anchors.map(a => `${a.title}(${a.distM != null ? a.distM + "m" : "?"})`).join(" / ") || "(なし→場所タイプで生成)");
 
+            // 待ち時間: 集めた「この土地の記録」を取材メモのように見せる（無ければ怪談の小話）
+            if (window.ImakokoWaitFeed) ImakokoWaitFeed.start(placeLabelOf(geo), anchors);
+
             // 3. 生成
             const chosenModel = modelSelect ? modelSelect.value : null;
             Logger.info("選択モデル", chosenModel || "(既定チェーン)");
@@ -1085,6 +1119,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                         draftLines = sanitizeStoryLines(story.lines).lines;   // 比較用に初稿も残す
                         if (!story2.ambience) story2.ambience = story.ambience;
                         if (!story2.title) story2.title = story.title;
+                        if (!story2.fear) story2.fear = story.fear;
                         story = story2;
                         refined = true;
                         Logger.info("推敲", `採用(初稿${textCount(draftLines)}行→改稿${textCount(story2.lines)}行)`);
@@ -1139,6 +1174,9 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 duration: "約3分",
                 lines: story.lines,
                 ambience: story.ambience,   // 舞台の環境音(2026-10)。空なら読む画面で本文から推定
+                // 演出の強さ(2026-10)。AIの判定→無ければ本文から推定。読む画面の灯り・恐怖演出の量になる
+                fear: story.fear || (window.ImakokoSettings ? ImakokoSettings.estimateFear(story.lines) : "standard"),
+                fearBy: story.fear ? "ai" : "estimate",
                 weather: weather || "",     // 生成時の空模様(2026-10)
                 refined,                    // 推敲を通したか(2026-10)
                 draftLines,                 // 推敲前の初稿(比較用。推敲しなかった場合は null)
@@ -1170,6 +1208,7 @@ if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded
                 msg += " 端末の位置情報が使えない場合は、設定欄で座標を手動入力できます。";
                 document.getElementById("settings").open = true;
             }
+            if (window.ImakokoWaitFeed) ImakokoWaitFeed.stop();
             setStatus(msg, "error");
             document.getElementById("log-panel").open = true; // 失敗時はログを自動展開
             btn.disabled = false;

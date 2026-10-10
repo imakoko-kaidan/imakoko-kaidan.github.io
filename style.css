@@ -768,3 +768,16 @@ body.fx-shake {
 #card-preview img { width: 100%; height: auto; border: 1px solid #2c3242; border-radius: 6px; box-shadow: 0 0 40px rgba(0,0,0,.6); }
 #card-preview .cp-actions { display: flex; flex-direction: column; gap: .6rem; margin-top: 1rem; }
 #card-preview .er-btn { display: block; text-decoration: none; text-align: center; }
+
+/* 読むのをやめる確認（2026-10） */
+#leave-dialog { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center;
+    padding: 6vh 7vw; background: rgba(2, 3, 6, .82); writing-mode: horizontal-tb; animation: ld-in .25s ease-out both; }
+#leave-dialog .ld-inner { max-width: 340px; width: 100%; padding: 1.6rem 1.3rem 1.3rem; text-align: center;
+    background: #0b0d14; border: 1px solid #262b3a; border-radius: 10px; box-shadow: 0 0 40px rgba(0,0,0,.7); }
+#leave-dialog .ld-title { margin: 0 0 .9rem; font-size: 1.02rem; color: #e3e6ee; letter-spacing: .08em; }
+#leave-dialog .ld-body { margin: 0 0 1.4rem; font-size: .82rem; line-height: 1.9; color: #9aa1b0; }
+#leave-dialog .ld-btns { display: flex; flex-direction: column; gap: .6rem; }
+#leave-dialog .ld-btn { min-height: 44px; border-radius: 8px; font: inherit; font-size: .9rem; letter-spacing: .1em; cursor: pointer; }
+#leave-dialog .ld-stay { background: #1c2233; color: #e6e9f2; border: 1px solid #3a4360; }
+#leave-dialog .ld-leave { background: transparent; color: #8a90a0; border: 1px solid #262b3a; }
+@keyframes ld-in { from { opacity: 0; } to { opacity: 1; } }

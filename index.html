@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <script src="./app-version.js?v=0.165"></script>
+    <script src="./app-version.js?v=0.167"></script>
     <title>イマココ怪談</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
     <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
@@ -18,7 +18,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="イマココ怪談">
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./home.css?v=0.165">
+    <link rel="stylesheet" href="./home.css?v=0.167">
 </head>
 <body>
     <!-- トップページの背景画像（最背面・CSSグリッチ） -->
@@ -69,6 +69,7 @@
         </button>
 
         <p id="status" class="status"></p>
+        <div id="wait-feed" class="wait-feed" hidden></div>
 
         <nav class="home-nav">
             <a href="./map.html" class="nav-link" data-text="📍 集めた怪談の地図">📍 集めた怪談の地図</a>
@@ -89,40 +90,27 @@
                 <input type="text" id="manual-coords" placeholder="例: 35.4407281,139.6310133（空なら現在地を使用）">
             </label>
 
-            <label>生成モデル（質とコストの体感比較用）
+            <label>生成モデル（話を書くAI）
                 <select id="model-select">
-                    <option value="gemini-3.8-flash">おすすめ / gemini-3.8-flash（約1.3円・最新で賢い・約20秒）</option>
-                    <option value="gemini-3.5-flash-lite">最安 / gemini-3.5-flash-lite（約0.4円・約5秒・短め/質は割切り）</option>
-                    <option value="gemini-3.1-pro-preview">最高品質 / gemini-3.1-pro（約6円目安・遅め・有料キーのみ）</option>
-                </select>
-            </label>
-            <label>怖さ
-                <select id="scare-level">
-                    <option value="mild">控えめ（激しい点滅・暗転・揺れなし／一瞬の恐怖演出は少なめ）</option>
-                    <option value="standard">標準（おすすめ）</option>
-                    <option value="intense">本気（灯りの乱れも、一瞬の何かも多め）</option>
+                    <option value="gemini-3.8-flash">おすすめ（gemini-3.8-flash）</option>
+                    <option value="gemini-3.5-flash-lite">安い・速い（gemini-3.5-flash-lite）短めで、質はほどほど</option>
+                    <option value="gemini-3.1-pro-preview">最高品質（gemini-3.1-pro）支払い登録したキーのみ</option>
                 </select>
             </label>
             <label class="toggle-row">
                 <input type="checkbox" id="refine-enabled">
-                <span>推敲する（編集者AIが怖さの観点で書き直す・+約20秒）</span>
+                <span class="toggle-text"><b>推敲（すいこう）する</b>
+                    <small>オン：書き上がった話を、AIの編集者がもう一度読み直し、より怖く・具体的に書き直してから届けます。待ち時間がのびます。<br>オフ：最初に書けた話をそのまま届けます（早い）。</small></span>
             </label>
             <label class="toggle-row">
                 <input type="checkbox" id="voice-enabled">
-                <span>語り手の声で読み上げる</span>
+                <span class="toggle-text"><b>語り手の声で読み上げる</b>
+                    <small>オン：読む画面で、本文を語り手の声が朗読します（音が出ます）。<br>オフ：文字だけで読みます。読む画面右上の「声」ボタンでも切り替えられます。</small></span>
             </label>
-            <table class="cost-table">
-                <caption>1話あたりの料金の目安</caption>
-                <thead><tr><th></th><th>無料枠のキー</th><th>支払い登録したキー</th></tr></thead>
-                <tbody>
-                    <tr><th>怪談をつくる</th><td>0円</td><td>約1.3円</td></tr>
-                    <tr><th>＋推敲</th><td>0円</td><td>＋約1.3円</td></tr>
-                    <tr><th>＋語り手の声</th><td>0円<sup>※</sup></td><td>＋約7円</td></tr>
-                </tbody>
-            </table>
+            <div id="cost-box" aria-live="polite"></div>
             <p class="note">※ 無料枠は1日に使える回数に上限があります。声は1話で約30回使うので、早めに上限に届きます。<br>
             ・「無料枠のキー」＝ Google AI Studio で支払い方法を登録していないキー。無料枠では、送った文章がGoogleのサービス改善に使われることがあります。<br>
-            ・声は一度聞いた話なら端末に保存され、2回目からは0円。初期はOFFです（読む画面右上の「声」でいつでも切替）。</p>
+            ・声は一度聞いた話なら端末に保存され、2回目からは0円。初期はOFFです。</p>
             <p class="note">※ 選んだモデルで生成します。失敗時は他の有効なモデルへ自動フォールバックします。コストは1話あたりの実測ベースの概算（2026-10測定・為替150円/ドル。3.8 Flashは2027年1月から約2倍）。<br>※ PCなど位置情報が取れない端末では座標を直接入力してください。空欄なら自動で現在地を測位します。位置情報は怪談の生成のみに使い端末の外に保存しません。検証用ビルドです。<br>※ 詳しくは <a href="./terms.html">利用規約</a> ・ <a href="./privacy.html">プライバシーポリシー</a> をご覧ください。</p>
         </details>
 
@@ -142,12 +130,14 @@
         </footer>
     </main>
 
-    <script src="./settings.js?v=0.165"></script>
-    <script src="./prefs.js?v=0.165"></script>
-    <script src="./db.js?v=0.165"></script>
-    <script src="./home-fx.js?v=0.165"></script>
-    <script src="./story_skeletons.js?v=0.165"></script>
-    <script src="./sound_cues.js?v=0.165"></script>
-    <script src="./generate.js?v=0.165"></script>
+    <script src="./settings.js?v=0.167"></script>
+    <script src="./prefs.js?v=0.167"></script>
+    <script src="./db.js?v=0.167"></script>
+    <script src="./home-fx.js?v=0.167"></script>
+    <script src="./story_skeletons.js?v=0.167"></script>
+    <script src="./sound_cues.js?v=0.167"></script>
+    <script src="./trivia.js?v=0.167"></script>
+    <script src="./wait_feed.js?v=0.167"></script>
+    <script src="./generate.js?v=0.167"></script>
 </body>
 </html>
