@@ -278,7 +278,8 @@
             });
         } catch (e) {
             if (fromUser) { micBtn.textContent = "マイクが使えません（タップで消せます）"; micBtn.disabled = true; }
-            try { localStorage.removeItem(MIC_PREF); } catch (er) { /* noop */ }
+            // 「許可しない」を選ばれた時だけ覚えるのをやめる（一時的な失敗では消さない）
+            if (e && e.name === "NotAllowedError") { try { localStorage.removeItem(MIC_PREF); } catch (er) { /* noop */ } }
             return;
         }
         try { localStorage.setItem(MIC_PREF, "1"); } catch (e) { /* noop */ }
@@ -341,13 +342,18 @@
         root.classList.add("show");
         dark.classList.add("show");
         if (!raf) { lastT = 0; raf = requestAnimationFrame(draw); }
-        // 一度マイクを許可した人は、許可が残っていれば自動でマイク待ち受け（ダイアログは出ない場合のみ）
+        // 2026-10: 一度「息で消す」を許可した人は、次からボタンを押さなくても最初から息で消せる。
+        // 端末側の許可が残っていれば確認は出ない。残っていない端末（iPhoneのSafariなど）では
+        // ブラウザの確認だけが出る（アプリからは消せない）。拒否されたら以後は自動では聞かない。
         try {
-            if (localStorage.getItem(MIC_PREF) && navigator.permissions) {
-                const st = await navigator.permissions.query({ name: "microphone" });
-                if (st.state === "granted") startMic(false);
+            if (localStorage.getItem(MIC_PREF)) {
+                let state = "unknown";
+                if (navigator.permissions) {
+                    try { state = (await navigator.permissions.query({ name: "microphone" })).state; } catch (e) { /* 未対応 */ }
+                }
+                if (state !== "denied") startMic(false);
             }
-        } catch (e) { /* Safari等は permissions 未対応 → ボタンで */ }
+        } catch (e) { /* 失敗してもタップで消せる */ }
     }
 
     function hide(force) {
